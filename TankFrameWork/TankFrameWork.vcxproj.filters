@@ -1,0 +1,194 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="FrameWork">
+      <UniqueIdentifier>{c17e836c-725a-42fb-bdcb-8b0b9b5b6531}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameWork\Input">
+      <UniqueIdentifier>{80960a28-dd47-4de3-a7c0-389ee4f1baa8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameWork\Sound">
+      <UniqueIdentifier>{a45d2ad0-7d10-45e9-a781-4db287ea9a55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object">
+      <UniqueIdentifier>{897cc452-ba4b-440e-9071-362335916afc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Boss">
+      <UniqueIdentifier>{5cf922de-6a21-49c9-9395-a84430d15003}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Items">
+      <UniqueIdentifier>{5999309a-de9f-4f4b-8fd7-01b84cd689a0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Map">
+      <UniqueIdentifier>{adb021c7-66b9-4c10-bb00-b7f232c6f448}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Object\Tank">
+      <UniqueIdentifier>{c8c83d54-ffa1-438e-9be1-4234da61b906}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameWork\Sprite">
+      <UniqueIdentifier>{702d1b4c-b0c6-48a0-9b49-c78f8512f8ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameWork\Scence">
+      <UniqueIdentifier>{4acb30f0-fa37-4d85-b4e0-1eaaf79e0a24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="FrameWork\TinyXML">
+      <UniqueIdentifier>{ae0fd7ab-064a-4a5e-af9a-ece05f8ed8e4}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Code\Keyboard.cpp">
+      <Filter>FrameWork\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\dsutil.cpp">
+      <Filter>FrameWork\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Sound.cpp">
+      <Filter>FrameWork\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\SoundTank.cpp">
+      <Filter>FrameWork\Sound</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Animation.cpp">
+      <Filter>FrameWork\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\InfoSprite.cpp">
+      <Filter>FrameWork\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Sprite.cpp">
+      <Filter>FrameWork\Sprite</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Collision.cpp">
+      <Filter>FrameWork</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Game.cpp">
+      <Filter>FrameWork</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Graphic.cpp">
+      <Filter>FrameWork</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Viewport.cpp">
+      <Filter>FrameWork</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Object.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\ObjectManager.cpp">
+      <Filter>Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Boss.cpp">
+      <Filter>Object\Boss</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Item.cpp">
+      <Filter>Object\Items</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Map.cpp">
+      <Filter>Object\Map</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Bullet.cpp">
+      <Filter>Object\Tank</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Tank.cpp">
+      <Filter>Object\Tank</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\TankEnemy.cpp">
+      <Filter>Object\Tank</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\TankPlayer.cpp">
+      <Filter>Object\Tank</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\Scene.cpp">
+      <Filter>FrameWork\Scence</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\tinystr.cpp">
+      <Filter>FrameWork\TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\tinyxml.cpp">
+      <Filter>FrameWork\TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\tinyxmlerror.cpp">
+      <Filter>FrameWork\TinyXML</Filter>
+    </ClCompile>
+    <ClCompile Include="Code\tinyxmlparser.cpp">
+      <Filter>FrameWork\TinyXML</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Code\Keyboard.h">
+      <Filter>FrameWork\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\dsutil.h">
+      <Filter>FrameWork\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\dxutil.h">
+      <Filter>FrameWork\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Sound.h">
+      <Filter>FrameWork\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\SoundTank.h">
+      <Filter>FrameWork\Sound</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Animation.h">
+      <Filter>FrameWork\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\InfoSprite.h">
+      <Filter>FrameWork\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Sprite.h">
+      <Filter>FrameWork\Sprite</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Collision.h">
+      <Filter>FrameWork</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Game.h">
+      <Filter>FrameWork</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Graphic.h">
+      <Filter>FrameWork</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Viewport.h">
+      <Filter>FrameWork</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\GameDefine.h" />
+    <ClInclude Include="Code\Object.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\ObjectManager.h">
+      <Filter>Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Boss.h">
+      <Filter>Object\Boss</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Item.h">
+      <Filter>Object\Items</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Map.h">
+      <Filter>Object\Map</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Bullet.h">
+      <Filter>Object\Tank</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Tank.h">
+      <Filter>Object\Tank</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\TankEnemy.h">
+      <Filter>Object\Tank</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\TankPlayer.h">
+      <Filter>Object\Tank</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\Scene.h">
+      <Filter>FrameWork\Scence</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\tinystr.h">
+      <Filter>FrameWork\TinyXML</Filter>
+    </ClInclude>
+    <ClInclude Include="Code\tinyxml.h">
+      <Filter>FrameWork\TinyXML</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
