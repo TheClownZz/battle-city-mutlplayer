@@ -24,12 +24,12 @@ namespace PNet
 		static bool ProcessPacket(uint8_t ID, Packet & packet, long timeRecive);
 		static bool ProcessPacket(Packet & packet, long timeRecive, sockaddr_in from);
 	private:
-		Socket socketListen;
 		uint8_t totalReady;
 		uint8_t numClient;
 		std::vector<HANDLE> listThread;
 		bool isStart;
 	public :
+		Socket socketListen;
 		static  Server * serverPtr;
 		uint16_t packetReceiveID[MAX_PlAYER];
 		uint16_t packetSendID;

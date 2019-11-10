@@ -47,10 +47,12 @@ public:
 
 	TankProperties GetProperties();
 	void SetProperties(TankProperties p, float lag);
+	void SetBulletProperties(TankBulletProperties p, float lag);
 	D3DXVECTOR2 GetVelocity(Statetank state);
 	void ServerShoot(float gametime, int bulletID);
 	void ClientShoot(float gametime, int bulletID);
 
+	void SetTimeImmortal(float time);
 	void SetImmortal(bool immortal);
 	bool isImmortal();
 

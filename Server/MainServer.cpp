@@ -63,17 +63,16 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 	{
 		std::cout << "Winsock api successfully initialized." << std::endl;
 		int numClient;
-		std::cout << "Nhap so luong client:";
+		std::cout << "Number player in room:";
 		std::cin >> numClient;
 		if (numClient > MAX_PlAYER)
 			numClient = MAX_PlAYER;
 		Server myServer(numClient);
-		char *serverIP = new char[20];
+	/*	char *serverIP = new char[20];
 		std::cout << "Nhap ip server:";
-		std::cin >> serverIP;
-		if (myServer.Create(IPEndpoint(serverIP, MY_PORT,false)) == PResult::P_Success)
+		std::cin >> serverIP;*/
+		if (myServer.Create(IPEndpoint(NULL, MY_PORT, false)) == PResult::P_Success)
 		{
-
 			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ListenClient,
 				(LPVOID)numClient, NULL, NULL);
 			// xu ly game o day 
@@ -127,7 +126,7 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 
 		}
 		else
-			cout << "cant create server ip:" << serverIP;
+			cout << "cant create server " << endl;
 	}
 	Network::Shutdown();
 	system("pause");

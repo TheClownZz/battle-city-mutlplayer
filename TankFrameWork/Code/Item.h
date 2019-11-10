@@ -12,12 +12,13 @@ class Item : public Object
 {
 protected:
 	Animation * ItemAnimation;
-	float TimeApper, TimeStand;
-	int SpriteItem, SpriteTank;
+	float TimeApper;
+	int SpriteItem;
+	long timeSend;
 public:
 	enum Itemtype
 	{
-		Shovel, //Xây metal wall cho boss
+		Hat, //bat tu
 		TankLife, //Tăng mạng
 		Gun, //Max power
 		NoneItem
@@ -31,7 +32,6 @@ public:
 	enum Stateitem
 	{
 		Appearing,//Xuất hiện
-		Standing,//Đứng yên
 		None //Không làm gì
 	};
 	Stateitem StateItem;
@@ -48,9 +48,6 @@ public:
 	//New
 	void New();
 
-	//Set 
-	void SetItem(D3DXVECTOR2 Position, int sprite_tank);
-
 	//Đổi chuyển động
 	void ChangeAnimation(float gameTime);
 
@@ -62,5 +59,9 @@ public:
 
 	//Render
 	void Render(Viewport* viewport);
+
+	void ShowItem(float lag, int x, int y, Itemtype type);
+
+	void EatItem(float lag, int playerID, vector <Tank*> ListTank, Itemtype type);
 };
 

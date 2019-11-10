@@ -7,7 +7,6 @@ TankEnemy::TankEnemy(Sprite* sprite, Sound* sound, int _id, int level) : Tank(sp
 {
 	this->Tag = Object::enemy;
 	this->Team = 3;//Màu xám
-	this->ItemTank = new Item(sprite, sound);
 	this->Life = 1;
 	this->Shoot = false;
 	this->LockMove = false;
@@ -18,7 +17,6 @@ TankEnemy::TankEnemy(Sprite* sprite, Sound* sound, int _id, int level) : Tank(sp
 
 TankEnemy::~TankEnemy()
 {
-	delete ItemTank;
 }
 
 void TankEnemy::SetLockMove(bool lockmove)
@@ -27,12 +25,6 @@ void TankEnemy::SetLockMove(bool lockmove)
 	if (lockmove)
 		this->TimeLock = 0.0f;
 }
-
-Item* TankEnemy::GetItemTank()
-{
-	return this->ItemTank;
-}
-
 //HP
 void  TankEnemy::CheckHP()
 {
@@ -178,14 +170,6 @@ void TankEnemy::ChangeAnimation(float gameTime)
 	{
 		//Kiểm tra HP
 		this->CheckHP();
-		//Nếu tank chết item rơi ngẫu nhiên
-		//if (ItemTank->GetState() == Item::Appearing)
-		//{
-		//	this->ItemTank->SetState(Item::Standing);
-		//	int xitem = (3 + rand() % 25) * 8;
-		//	int yitem = (2 + rand() % 25) * 8;
-		//	this->ItemTank->SetPosition(D3DXVECTOR2(xitem, yitem));
-		//}
 	}
 	//Kiểm tra lock
 	if (this->LockMove)
@@ -202,7 +186,6 @@ void TankEnemy::ChangeAnimation(float gameTime)
 
 	this->TimeMove += gameTime;
 	Tank::ChangeAnimation(gameTime);
-	//this->ItemTank->ChangeAnimation(gameTime);
 }
 
 void TankEnemy::OnCollision(Tank *tank_0, float gameTime)
@@ -248,5 +231,4 @@ void TankEnemy::Update(float gameTime)
 void TankEnemy::Render(Viewport* viewport)
 {
 	Tank::Render(viewport);
-	//this->ItemTank->Render(viewport);
 }

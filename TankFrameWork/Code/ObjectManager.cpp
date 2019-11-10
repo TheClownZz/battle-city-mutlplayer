@@ -66,6 +66,8 @@ void ObjectManager::InitDT(Graphic* graphic, Sound *_sound)
 	{
 		ListBoss.at(i)->New();
 	}
+	Item *item = new Item(SpriteTank, sound);
+	ListItem.push_back(item);
 }
 
 void ObjectManager::ServerCreateObject(int _numPlayer)
@@ -221,6 +223,8 @@ void ObjectManager::Start(int stage)
 	{
 		ListItem.at(i)->SetItemType(Item::NoneItem);
 		ListItem.at(i)->SetState(Item::None);
+		ListItem.at(i)->SetAllowDraw(false);
+		ListItem.at(i)->SetBoundZero();
 	}
 	for (size_t i = 0; i < ListBoss.size(); i++)
 	{

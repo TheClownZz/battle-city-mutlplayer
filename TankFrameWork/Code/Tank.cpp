@@ -115,10 +115,15 @@ bool Tank::isImmortal()
 {
 	return Immortal;
 }
+void Tank::SetTimeImmortal(float time)
+{
+	this->TimeImmortal = time;
+}
 void Tank::SetImmortal(bool immortal)
 {
 	this->Immortal = immortal;
 }
+
 
 void Tank::SetLockMove(bool lockmove)
 {
@@ -317,7 +322,6 @@ void Tank::ChangeAnimation(float gameTime)
 		{
 			if (!ListBullet.at(i)->GetAllowDraw())
 			{
-				// Server send shoot
 				if (Server::serverPtr != NULL)
 					ServerShoot(gameTime, i);
 				else
@@ -356,7 +360,7 @@ void Tank::ServerShoot(float gametime, int bulletID)
 
 	ListBullet.at(bulletID)->ChangeAnimation(gametime);
 
-	// Server send
+	// Server send 
 	{
 		Packet p(PacketType::PT_Shoot);
 		uint8_t tankID = (uint8_t)GetIDNetWork();
@@ -376,7 +380,7 @@ void Tank::ServerShoot(float gametime, int bulletID)
 		}
 	}
 }
-
+// not use
 void Tank::ClientShoot(float gametime, int bulletID)
 {
 	if (queue_bulletP.size() <= 0)
@@ -413,6 +417,14 @@ TankProperties Tank::GetProperties()
 	else
 		p.isBlock = false;
 	p.direct = this->DirectionTank;
+	/*if (ListBullet.size() > 0)
+	{
+		Bullet *bullet = ListBullet.at(0);
+		p.bullet.x = bullet->GetPosition().x;
+		p.bullet.y = bullet->GetPosition().y;
+		p.bullet.state = bullet->GetState();
+		p.bullet.direct = bullet->GetDirection();
+	}*/
 	return p;
 }
 
@@ -456,22 +468,54 @@ void Tank::SetProperties(TankProperties p, float lag)
 		this->New();
 		this->TimeAppear += lag;
 	}
-
-	if (!p.isBlock)
+	D3DXVECTOR2 velocity = GetVelocity(p.state);
+	if (VectorDistance(this->position, D3DXVECTOR2(p.x + lag * velocity.x, p.y + lag * velocity.y)) > MaxDistance)
 	{
-		D3DXVECTOR2 velocity = GetVelocity(p.state);
-		this->SetPositionX(p.x + lag * velocity.x);
-		this->SetPositionY(p.y + lag * velocity.y);
-	}
-	else
-	{
-		this->SetPositionX(p.x);
-		this->SetPositionY(p.y);
+		if (!p.isBlock)
+		{
+			this->SetPositionX(p.x + lag * velocity.x);
+			this->SetPositionY(p.y + lag * velocity.y);
+		}
+		else
+		{
+			this->SetPositionX(p.x);
+			this->SetPositionY(p.y);
 
+		}
 	}
 
 	this->StateTank = p.state;
 	this->DirectionTank = p.direct;
+
+	//SetBulletProperties(p.bullet, lag);
+}
+
+void Tank::SetBulletProperties(TankBulletProperties p, float lag)
+{
+	if (ListBullet.size() <= 0)
+		return;
+
+	if (ListBullet.at(0)->GetState() != p.state && ListBullet.at(0)->GetState() == Bullet::Bursting)
+	{
+		if (!ListBullet.at(0)->GetAllowDraw())
+		{
+			ListBullet.at(0)->NewBullet(D3DXVECTOR2(p.x, p.y),
+				p.direct, this->Level);
+			D3DXVECTOR2 velocity = ListBullet.at(0)->GetVelocity();
+			ListBullet.at(0)->SetPositionX(p.x + lag * velocity.x);
+			ListBullet.at(0)->SetPositionY(p.y + lag * velocity.y);
+		}
+		else
+		{
+			if (VectorDistance(ListBullet.at(0)->GetPosition(),
+				D3DXVECTOR2(p.x + lag * velocity.x, p.y + lag * velocity.y)) > MaxDistance)
+			{
+				D3DXVECTOR2 velocity = ListBullet.at(0)->GetVelocity();
+				ListBullet.at(0)->SetPositionX(p.x + lag * velocity.x);
+				ListBullet.at(0)->SetPositionY(p.y + lag * velocity.y);
+			}
+		}
+	}
 }
 
 //Va chạm
@@ -509,7 +553,6 @@ void Tank::OnCollision(Object *object_0, float gameTime)
 		}
 	}
 }
-
 //Update
 void Tank::Update(float gameTime)
 {

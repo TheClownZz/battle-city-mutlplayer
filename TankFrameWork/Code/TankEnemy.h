@@ -1,18 +1,15 @@
 ﻿#pragma once
 #include "Tank.h"
-#include "Item.h"
 
 class TankEnemy : public Tank
 {
 protected:
-	Item* ItemTank;
 	float TimeLock, TimeChangeMove, TimeMove;
 	bool LockMove;
 public:
 	TankEnemy(Sprite* sprite, Sound* sound, int _id, int level = 4);
 	~TankEnemy();
 
-	Item* GetItemTank();
 
 	void SetLockMove(bool lockmove);
 

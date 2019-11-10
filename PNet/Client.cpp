@@ -279,6 +279,12 @@ namespace PNet
 			clientPtr->gamePacket.Append(p);
 			break;
 		}
+		case PacketType::PT_Item:
+		{
+			Packet p(PacketType::PT_Item);
+			p._buffer = packet._buffer;
+			clientPtr->gamePacket.Append(p);
+		}
 		default:
 			return false;
 		}

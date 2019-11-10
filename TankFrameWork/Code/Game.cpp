@@ -170,14 +170,22 @@ void Game::ServerSendProperties()
 	{
 		TankProperties properties = SceneManager->GetObjectManager()->GetListTank().at(i)->GetProperties();
 		int x, y;
-
 		x = properties.x * 10;
 		y = properties.y * 10;
+
 		p.write_bits(x, 12);
 		p.write_bits(y, 12);
 		p.write_bits(properties.state, 4);
 		p.write_bits(properties.isBlock, 1);
 		p.write_bits(properties.direct, 2);
+
+		//int bx, by;
+		//bx = properties.bullet.x * 10;
+		//by = properties.bullet.y * 10;
+		//p.write_bits(bx, 12);
+		//p.write_bits(by, 12);
+		//p.write_bits(properties.bullet.state, 1);
+		//p.write_bits(properties.bullet.direct, 2);
 	}
 	Server::serverPtr->udpConnection.pm.Append(p);
 }
@@ -238,4 +246,28 @@ void Game::UpdateMap(vector<TileInfo> serverMap, long timeSend, int stageIndex)
 {
 	SceneManager->GetObjectManager()->GetMap()->UpdateTileMap(serverMap, timeSend, stageIndex);
 }
+
+void Game::ShowItem(long timeSend, int x, int y, int type)
+{
+	vector <Item*> ListItem = SceneManager->GetObjectManager()->GetListItem();
+	if (ListItem.size() <= 0)
+		return;
+	long current = GetTickCount();
+	float lag = ((float)(current + Client::timeDifference - timeSend)) / 1000;
+	ListItem.at(0)->ShowItem(lag, x, y, (Item::Itemtype)type);
+}
+
+void Game::EatItem(long timeSend, int playerID, int type)
+{
+	vector <Item*> ListItem = SceneManager->GetObjectManager()->GetListItem();
+	
+	if (ListItem.size() <= 0)
+		return;
+	long current = GetTickCount();
+	float lag = ((float)(current + Client::timeDifference - timeSend)) / 1000;
+	ListItem.at(0)->EatItem(lag, playerID, 
+		SceneManager->GetObjectManager()->GetListTank(),(Item::Itemtype)type);
+
+}
+
 

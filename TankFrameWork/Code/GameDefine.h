@@ -59,8 +59,14 @@ namespace Define
 	const float BulletSpeed = 12.0f;
 
 	//Các giới hạn
+	const float MaxDistance = 8;
 	const int EnemyMax = 8;//số lượng xe tăng địch tối đa
 	const float Immortal_Time = 3000;
 	const float DEFAULT_SHOOT_COLDOWN = -500;
+
+	inline float VectorDistance(D3DXVECTOR2 v1, D3DXVECTOR2 v2)
+	{
+		return sqrt((v1.x - v2.x)*(v1.x - v2.x) + (v1.y - v2.y)*(v1.y - v2.y));
+	}
 
 }

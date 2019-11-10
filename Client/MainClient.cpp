@@ -6,6 +6,8 @@
 #include <Windows.h>
 #include <TankFrameWork\Code\Game.h>
 #include <TankFrameWork\Code\GameDefine.h>
+#include <fstream>
+
 #pragma warning(disable: 4996)
 #pragma comment(lib, "Ws2_32.lib")
 using namespace PNet;
@@ -20,7 +22,7 @@ void ProcessPacket(Packet & packet, Game &game)
 		int bitIndex = NUM_BIT_PACKET;
 		uint8_t numPlayer;
 		numPlayer = packet.read_bits(bitIndex, 3);
-		int listLevel[NUM_ENEMY];
+		int listLevel[4];
 		for (int i = 0; i < NUM_ENEMY; i++)
 		{
 			listLevel[i] = packet.read_bits(bitIndex, 4);
@@ -39,8 +41,8 @@ void ProcessPacket(Packet & packet, Game &game)
 		TankProperties listProperties[4 + NUM_ENEMY];
 		for (int i = 0; i < Client::clientPtr->numPlayer + NUM_ENEMY; i++)
 		{
-			uint8_t state;
-			int x, y, direct;
+			uint8_t state, bState;
+			int x, y, direct, bx, by, bDirect;
 			bool isBlock;
 			x = packet.read_bits(bitIndex, 12);
 			y = packet.read_bits(bitIndex, 12);
@@ -53,6 +55,16 @@ void ProcessPacket(Packet & packet, Game &game)
 			listProperties[i].state = (Statetank)state;
 			listProperties[i].isBlock = isBlock;
 			listProperties[i].direct = direct;
+
+			/*bx = packet.read_bits(bitIndex, 12);
+			by = packet.read_bits(bitIndex, 12);
+			bState = packet.read_bits(bitIndex, 1);
+			bDirect = packet.read_bits(bitIndex, 2);
+
+			listProperties[i].bullet.x = (float)bx / 10;
+			listProperties[i].bullet.y = (float)by / 10;
+			listProperties[i].bullet.state = bState;
+			listProperties[i].bullet.direct = bDirect;*/
 		}
 		game.UpdateTankProperties(timeSend, listProperties);
 		break;
@@ -105,9 +117,41 @@ void ProcessPacket(Packet & packet, Game &game)
 		game.UpdateMap(serverMap, timeSend, stageIndex);
 		break;
 	}
+	case PacketType::PT_Item:
+	{
+		int bitIndex = NUM_BIT_PACKET;
+		bool isShow = packet.read_bits(bitIndex, 1);
+		if (isShow)
+		{
+			long timeSend = packet.read_bits(bitIndex, sizeof(long) * 8);
+			int type = packet.read_bits(bitIndex, 2);
+			int x = packet.read_bits(bitIndex, 8);
+			int y = packet.read_bits(bitIndex, 8);
+			game.ShowItem(timeSend, x, y, type);
+		}
+		else
+		{
+			long timeSend = packet.read_bits(bitIndex, sizeof(long) * 8);
+			int type = packet.read_bits(bitIndex, 2);
+			int playerID = packet.read_bits(bitIndex, 3);
+			game.EatItem(timeSend, playerID, type);
+		}
+		break;
+	}
 	default:
 		break;
 	}
+}
+
+string ReadServerIp()
+{
+	string item_name;
+	ifstream nameFileout;
+	nameFileout.open("ipconfig.txt");
+	std::getline(nameFileout, item_name);
+	std::cout << "ReadServerIp:" << item_name << std::endl;
+	nameFileout.close();
+	return  item_name;
 }
 
 int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
@@ -122,9 +166,8 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 		Client myClient;
 		if (myClient.Create() == PResult::P_Success)
 		{
-			char *serverIP = new char[20];
-			std::cout << "Nhap ip server:";
-			std::cin >> serverIP;
+			char serverIP[20];
+			strcpy(serverIP, ReadServerIp().c_str());
 			if (myClient.Connect(IPEndpoint(serverIP, MY_PORT)) == PResult::P_Success)
 			{
 				while (!myClient.udpConnection.isConnect)
@@ -176,12 +219,12 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 						if (gameTime >= frame_rate)
 						{
 							startTime = endTime;
-							game.Update(gameTime);
 							while (Client::clientPtr->gamePacket.HasPendingPackets())
 							{
 								Packet p = Client::clientPtr->gamePacket.Retrieve();
 								ProcessPacket(p, game);
 							}
+							game.Update(gameTime);
 							game.Render();
 						}
 						else

@@ -1,5 +1,6 @@
-﻿#include "Bullet.h"
-
+﻿#include<PNet/Constants.h>
+#include "Bullet.h"
+using namespace PNet;
 
 
 Bullet::Bullet(Sprite* sprite, Sound* sound)
@@ -9,7 +10,7 @@ Bullet::Bullet(Sprite* sprite, Sound* sound)
 	this->sprite = sprite;
 	this->BulletAnimation = new Animation(this->sprite);
 	this->positionStart = D3DXVECTOR2(0.0f, 0.0f);
-	this->StateBullet = Bullet::Firing;
+	this->StateBullet = Bullet::Bursting;
 	this->AllowDraw = false;
 }
 
@@ -98,6 +99,8 @@ void Bullet::NewBullet(D3DXVECTOR2 position_tank, int direction_tank, int level)
 //Đổi chuyển động
 void Bullet::ChangeAnimation(float gameTime)
 {
+	if (!this->AllowDraw)
+		return;
 	switch (StateBullet)
 	{
 	case Bullet::Firing:
@@ -193,3 +196,5 @@ void Bullet::Render(Viewport* viewport)
 		return;
 	this->BulletAnimation->Render(viewport);
 }
+
+

@@ -46,5 +46,8 @@ public:
 
 	//Render
 	void Render(Viewport* viewport);
+
+	void SetTimeBurst(float time) { this->TimeBurst = time; }
+
 };
 

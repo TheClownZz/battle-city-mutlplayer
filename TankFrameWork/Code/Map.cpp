@@ -79,7 +79,7 @@ void Map::SaveTile(int x, int y, int value)
 void Map::ServerSendUpdateMap()
 {
 	long time = GetTickCount();
-	if ((float)(time - timeSend) / 1000.0f < 10)
+	if ((float)(time - timeSend) / 1000.0f < TIME_UPDATE_MAP)
 		return;
 	timeSend = time;
 	if (listTile.size() == 0)

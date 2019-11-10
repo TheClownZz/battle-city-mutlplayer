@@ -49,6 +49,8 @@ public:
 	void Shoot(int tankID, BulletProperties bulletP);
 	void SetEndGame(long timeSend, int team, bool isBossDead);
 	void UpdateMap(vector<TileInfo> serverMap,long timeSend, int stageIndex);
+	void ShowItem(long timeSend, int x, int y, int type);
+	void EatItem(long timeSend, int playerID, int type);
 private :
 	void ClientSendInput();
 	void ServerSendProperties();

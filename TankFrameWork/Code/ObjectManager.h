@@ -15,6 +15,7 @@
 #include <vector>
 #include "GameDefine.h"
 #include"SoundTank.h"
+#include"Item.h"
 using namespace Define;
 
 struct TankP
@@ -81,6 +82,7 @@ public:
 	int End();
 
 	vector <Tank*> GetListTank() { return ListTank; }
+	vector <Item*> GetListItem() { return ListItem; }
 	vector <Boss*> GetListBoss() { return ListBoss; }
 	Map* GetMap() { return map; }
 	void SetClientEnd(int end);
