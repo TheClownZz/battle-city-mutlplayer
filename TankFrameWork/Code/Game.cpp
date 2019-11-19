@@ -2,7 +2,8 @@
 #include<PNet\Client.h>
 #include<PNet\Packet.h>
 #include "Game.h"
-
+const int SERVER_SEND_RATE = 25;
+const int CLIENT_SEND_RATE = 40;
 
 Game::Game(HINSTANCE Hins, int width, int height, char* name, uint8_t id)
 {
@@ -128,7 +129,7 @@ void Game::CreateObject(uint8_t numPlayer, uint8_t id, int listLevelEnemy[])
 void Game::ClientSendInput()
 {
 	long time = GetTickCount();
-	if (time - timeSend < 1000.0f / SEND_RATE)
+	if (time - timeSend < 1000.0f / CLIENT_SEND_RATE)
 		return;
 	keyboard->GetStage();
 	timeSend = time;
@@ -143,7 +144,7 @@ void Game::ClientSendInput()
 	uint16_t packetID = Client::clientPtr->packetSendID++;
 	p.write_bits(localID, 2);
 	p.write_bits(packetID, sizeof(uint16_t) * 8);
-	p.write_bits(timeSend + Client::timeDifference, sizeof(long) * 8);
+	p.write_bits(time + Client::timeDifference, sizeof(long) * 8);
 	p.write_bits(input.isShoot, 1);
 	p.write_bits(input.isLeft, 1);
 	p.write_bits(input.isRight, 1);
@@ -156,7 +157,7 @@ void Game::ClientSendInput()
 void Game::ServerSendProperties()
 {
 	long time = GetTickCount();
-	if (time - timeSend < 1000.0f / SEND_RATE)
+	if (time - timeSend < 1000.0f / SERVER_SEND_RATE)
 		return;
 	timeSend = time;
 	size_t numTank = SceneManager->GetObjectManager()->GetListTank().size();
@@ -176,46 +177,49 @@ void Game::ServerSendProperties()
 		p.write_bits(x, 12);
 		p.write_bits(y, 12);
 		p.write_bits(properties.state, 4);
-		p.write_bits(properties.isBlock, 1);
 		p.write_bits(properties.direct, 2);
+		p.write_bits(properties.dx + 1, 2);
+		p.write_bits(properties.dy + 1, 2);
 
-		//int bx, by;
-		//bx = properties.bullet.x * 10;
-		//by = properties.bullet.y * 10;
-		//p.write_bits(bx, 12);
-		//p.write_bits(by, 12);
-		//p.write_bits(properties.bullet.state, 1);
-		//p.write_bits(properties.bullet.direct, 2);
 	}
 	Server::serverPtr->udpConnection.pm.Append(p);
 }
 
-void Game::HandleInput(PNet::InputState input, uint8_t clientID, long timeSend)
+void Game::HandleInput()
 {
 	if (localID == UNDEFINE_ID || SceneManager->GetObjectManager()->GetListTank().size() <= 0)
+	{
 		return;
+	}
 	long current = GetTickCount();
-	float lag = ((float)(current - timeSend)) / 1000;
-	if (lag < 0 || lag * 1000 > Max_Ping)
-		return;
-	Tank *tank = SceneManager->GetObjectManager()->GetListTank().at(clientID);
-	Statetank old = tank->GetState();
-	tank->KeyHandle(input, lag);
-	if (old == tank->GetState())
-		return;
-	D3DXVECTOR2 velocity = tank->GetVelocity(tank->GetState());
-	D3DXVECTOR2 pos = tank->GetPosition();
-	pos.x += velocity.x*lag;
-	pos.y += velocity.y*lag;
-	tank->SetPosition(pos);
+	for (size_t i = 0; i < listInput.size(); i++)
+	{
+		float lag = (float)(current - listInput.at(i).timeSend);
+		if (lag < 0 || lag  >  Max_Ping)
+			continue;
+		Tank *tank = SceneManager->GetObjectManager()->GetListTank().at(listInput.at(i).clientID);
+		tank->KeyHandle(listInput.at(i), lag);
+	}
 }
 
-void Game::UpdateTankProperties(long timeSend, TankProperties listProperties[])
+void Game::HandleInput(InputState input)
 {
 	if (localID == UNDEFINE_ID || SceneManager->GetObjectManager()->GetListTank().size() <= 0)
 		return;
 	long current = GetTickCount();
-	float lag = ((float)(current + Client::timeDifference - timeSend)) / 1000;
+	float lag = (float)(current - input.timeSend);
+	if (lag < 0 || lag >  Max_Ping)
+		return;
+	Tank *tank = SceneManager->GetObjectManager()->GetListTank().at(input.clientID);
+	tank->KeyHandle(input, lag);
+}
+
+void Game::UpdateTankProperties(long timeServerSend, TankProperties listProperties[])
+{
+	if (localID == UNDEFINE_ID || SceneManager->GetObjectManager()->GetListTank().size() <= 0)
+		return;
+	long current = GetTickCount();
+	float lag = ((float)(current + Client::timeDifference - timeServerSend));
 	size_t numTank = SceneManager->GetObjectManager()->GetListTank().size();
 	for (size_t i = 0; i < numTank; i++)
 	{
@@ -232,42 +236,72 @@ void Game::Shoot(int tankID, BulletProperties bulletP)
 	tank->SetShoot(true, bulletP);
 }
 
-void Game::SetEndGame(long timeSend, int team, bool isBossDead)
+void Game::BurstingBullet(int tankID, long timeServerSend)
+{
+	if (localID == UNDEFINE_ID || SceneManager->GetObjectManager()->GetListTank().size() <= 0)
+		return;
+	Tank *tank = SceneManager->GetObjectManager()->GetListTank().at(tankID);
+	tank->SetBurstingBullet(timeServerSend);
+}
+
+void Game::SetEndGame(long timeServerSend, int team, bool isBossDead)
 {
 	long current = GetTickCount();
-	float lag = ((float)(current + Client::timeDifference - timeSend)) / 1000;
+	float lag = ((float)(current + Client::timeDifference - timeServerSend));
 	SceneManager->timedelay += lag;
 	SceneManager->GetObjectManager()->SetClientEnd(team);
 	if (isBossDead)
 		SceneManager->GetObjectManager()->GetListBoss().at(team)->SetState(Boss::Dead);
 }
 
-void Game::UpdateMap(vector<TileInfo> serverMap, long timeSend, int stageIndex)
+void Game::UpdateMap(vector<TileInfo> serverMap, long timeServerSend, int stageIndex)
 {
-	SceneManager->GetObjectManager()->GetMap()->UpdateTileMap(serverMap, timeSend, stageIndex);
+	SceneManager->GetObjectManager()->GetMap()->UpdateTileMap(serverMap, timeServerSend, stageIndex);
 }
 
-void Game::ShowItem(long timeSend, int x, int y, int type)
+void Game::ShowItem(long timeServerSend, int x, int y, int type)
 {
 	vector <Item*> ListItem = SceneManager->GetObjectManager()->GetListItem();
 	if (ListItem.size() <= 0)
 		return;
 	long current = GetTickCount();
-	float lag = ((float)(current + Client::timeDifference - timeSend)) / 1000;
+	float lag = ((float)(current + Client::timeDifference - timeServerSend));
 	ListItem.at(0)->ShowItem(lag, x, y, (Item::Itemtype)type);
 }
 
-void Game::EatItem(long timeSend, int playerID, int type)
+void Game::EatItem(long timeServerSend, int playerID, int type)
 {
 	vector <Item*> ListItem = SceneManager->GetObjectManager()->GetListItem();
-	
+
 	if (ListItem.size() <= 0)
 		return;
 	long current = GetTickCount();
-	float lag = ((float)(current + Client::timeDifference - timeSend)) / 1000;
-	ListItem.at(0)->EatItem(lag, playerID, 
-		SceneManager->GetObjectManager()->GetListTank(),(Item::Itemtype)type);
+	float lag = ((float)(current + Client::timeDifference - timeServerSend));
+	ListItem.at(0)->EatItem(lag, playerID,
+		SceneManager->GetObjectManager()->GetListTank(), (Item::Itemtype)type);
 
+}
+
+void Game::UpdateState(SaveWorld *saveWorld)
+{
+	ObjectManager *gameObjects = GetScene()->GetObjectManager();
+
+	gameObjects->GetMap()->CopyMap(saveWorld->map);
+
+	for (size_t i = 0; i < gameObjects->GetListTank().size(); i++)
+	{
+		gameObjects->GetListTank().at(i)->CopyTank(saveWorld->listTank.at(i));
+	}
+
+	for (size_t i = 0; i < gameObjects->GetListItem().size(); i++)
+	{
+		gameObjects->GetListItem().at(i)->CopyItem(saveWorld->listItem.at(i));
+	}
+
+	for (size_t i = 0; i < gameObjects->GetListBoss().size(); i++)
+	{
+		gameObjects->GetListBoss().at(i)->CopyBoss(saveWorld->listBoss.at(i));
+	}
 }
 
 

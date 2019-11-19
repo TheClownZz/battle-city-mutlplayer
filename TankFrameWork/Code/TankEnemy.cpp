@@ -9,8 +9,6 @@ TankEnemy::TankEnemy(Sprite* sprite, Sound* sound, int _id, int level) : Tank(sp
 	this->Team = 3;//Màu xám
 	this->Life = 1;
 	this->Shoot = false;
-	this->LockMove = false;
-	this->TimeLock = 0.0f;
 	this->Level = level;
 }
 
@@ -19,12 +17,6 @@ TankEnemy::~TankEnemy()
 {
 }
 
-void TankEnemy::SetLockMove(bool lockmove)
-{
-	this->LockMove = lockmove;
-	if (lockmove)
-		this->TimeLock = 0.0f;
-}
 //HP
 void  TankEnemy::CheckHP()
 {
@@ -110,24 +102,8 @@ void TankEnemy::AI()
 		return;
 	}
 
-	//Vị trí Item
-	//int sprite_item = this->TankAnimation->GetIndex() - (this->Team - 2) * 64;
-	//this->ItemTank->SetItem(this->position, sprite_item);
-
-	if (this->LockMove)
-	{
-		this->Shoot = false;
-		return;
-	}
-
 	//Cho phép Tank bắn
 	this->Shoot = true;
-
-	//Kiểm tra chạm tường
-	//if (velocity.x == 0.0f && velocity.y == 0.0f)
-	//{
-	//	this->TimeMove = this->TimeChangeMove;
-	//}
 
 	//Kiểm tra chuyển hướng
 	if (TimeMove >= TimeChangeMove)
@@ -165,25 +141,11 @@ void TankEnemy::AI()
 //Đổi chuyển động
 void TankEnemy::ChangeAnimation(float gameTime)
 {
-	
 	if (this->StateTank == Statetank::Dying)
 	{
 		//Kiểm tra HP
 		this->CheckHP();
 	}
-	//Kiểm tra lock
-	if (this->LockMove)
-	{
-		//lock hơn 15s thì mở
-		this->TimeLock += gameTime;
-		if (TimeLock >= 15000.0f)
-		{
-			this->LockMove = false;
-			this->TimeLock = 0.0f;
-			return;
-		}
-	}
-
 	this->TimeMove += gameTime;
 	Tank::ChangeAnimation(gameTime);
 }
@@ -208,6 +170,10 @@ void TankEnemy::OnCollision(Tank *tank_0, float gameTime)
 					tank_0->SetState(Statetank::Dying);
 			}
 			ListBullet.at(i)->SetState(Bullet::Bursting);
+			if (Server::serverPtr != NULL)
+			{
+				ListBullet.at(i)->SendBurstingBullet(this->idNetWork);
+			}
 		}
 	}
 }

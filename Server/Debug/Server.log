@@ -1,1 +1,8 @@
-﻿  Server.vcxproj -> E:\hoctap\Game\Game socket\TankSocket\Debug\Server.exe
+﻿  MainServer.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+e:\hoctap\game\game socket\tanksocket\server\mainserver.cpp(101): warning C4018: '<': signed/unsigned mismatch
+e:\hoctap\game\game socket\tanksocket\server\mainserver.cpp(118): warning C4018: '>=': signed/unsigned mismatch
+  SaveWorld.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Generating Code...
+  Server.vcxproj -> E:\hoctap\Game\Game socket\TankSocket\Debug\Server.exe

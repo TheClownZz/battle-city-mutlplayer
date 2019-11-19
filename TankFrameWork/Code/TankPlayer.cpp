@@ -17,8 +17,11 @@ TankPlayer::TankPlayer(Sprite* sprite, Sound* sound, int team, int _id) : Tank(s
 
 TankPlayer::~TankPlayer()
 {
-	delete EffectAnimation;
+	if (EffectAnimation)
+		delete EffectAnimation;
 }
+
+
 
 //Kiểm tra level
 void TankPlayer::SetLevel(int level)
@@ -63,7 +66,7 @@ void TankPlayer::New()
 
 	this->TankSpeed = RunSpeed;
 	this->Level = 0;
-	
+
 	this->Life--;
 
 	if (this->Life < 0)
@@ -85,19 +88,9 @@ void TankPlayer::KeyHandle(Keyboard* key)
 	//Xuất hiện, đang bị thương và chết không di chuyển được
 	if (this->StateTank == Statetank::Appearing || this->StateTank == Statetank::Dying || this->StateTank == Statetank::Dead)
 	{
-		this->Shoot = false;
+		//this->Shoot = false;
 		return;
 	}
-	//Cho phép tank bắn
-	if (key->IsKeyDown(Dik_SHOOT))
-	{
-		this->Shoot = true;
-	}
-	else
-	{
-		this->Shoot = false;
-	}
-	//Bị thương vẫn bắn được
 	if (this->StateTank == Statetank::Bleeing)
 	{
 		return;
@@ -106,32 +99,33 @@ void TankPlayer::KeyHandle(Keyboard* key)
 	if (key->IsKeyDown(Dik_LEFT) && key->GIsKeyUp(Dik_RIGHT))
 	{
 		this->StateTank = Statetank::RunningLeft;
-		
+
 	}
 	else if (key->IsKeyDown(Dik_RIGHT) && key->GIsKeyUp(Dik_LEFT))
 	{
 		this->StateTank = Statetank::RunningRight;
-		
+
 	}
 	else if (key->IsKeyDown(Dik_UP) && key->GIsKeyUp(Dik_DOWN))
 	{
 		this->StateTank = Statetank::RunningUp;
-		
+
 	}
 	else if (key->IsKeyDown(Dik_DOWN) && key->GIsKeyUp(Dik_UP))
 	{
 		this->StateTank = Statetank::RunningDown;
-		
+
 	}
 	else
 	{
-		
+
 		this->StateTank = Statetank::Standing;
 	}
 }
 
 void TankPlayer::KeyHandle(PNet::InputState input, float lag)
-{//Xuất hiện, đang bị thương và chết không di chuyển được
+{
+	//Xuất hiện, đang bị thương và chết không di chuyển được
 	if (this->StateTank == Statetank::Appearing || this->StateTank == Statetank::Dying || this->StateTank == Statetank::Dead)
 	{
 		this->Shoot = false;
@@ -190,11 +184,13 @@ void TankPlayer::ChangeAnimation(float gameTime)
 		if (TimeImmortal >= Immortal_Time)
 		{
 			this->Immortal = false;
-			this->EffectAnimation->SetPosition(D3DXVECTOR2(0.0f, 0.0f));
+			if (EffectAnimation)
+				this->EffectAnimation->SetPosition(D3DXVECTOR2(0.0f, 0.0f));
 			this->TimeImmortal = 0.0f;
 			return;
 		}
-		this->EffectAnimation->SetFrame(this->position, false, 50, 304, 305);
+		if (EffectAnimation)
+			this->EffectAnimation->SetFrame(this->position, false, 50, 304, 305);
 	}
 
 	Tank::ChangeAnimation(gameTime);
@@ -205,7 +201,7 @@ void TankPlayer::OnCollision(Tank *tank_0, float gameTime)
 
 	Object* object_0 = tank_0;
 	Tank::OnCollision(object_0, gameTime);
-	
+
 	//Kiểm tra đạn
 	for (size_t i = 0; i < ListBullet.size(); i++)
 	{
@@ -229,6 +225,11 @@ void TankPlayer::OnCollision(Tank *tank_0, float gameTime)
 			}
 
 			ListBullet.at(i)->SetState(Bullet::Bursting);
+			if (Server::serverPtr != NULL)
+			{
+				ListBullet.at(i)->SendBurstingBullet(this->idNetWork);
+			}
+
 		}
 		//Kiểm tra với đạn tank khác
 		for (size_t j = 0; j < tank_0->GetListBullet().size(); j++)
@@ -238,6 +239,11 @@ void TankPlayer::OnCollision(Tank *tank_0, float gameTime)
 			{
 				ListBullet.at(i)->SetState(Bullet::Bursting);
 				tank_0->GetListBullet().at(j)->SetState(Bullet::Bursting);
+				if (Server::serverPtr != NULL)
+				{
+					ListBullet.at(i)->SendBurstingBullet(this->idNetWork);
+					tank_0->GetListBullet().at(j)->SendBurstingBullet(tank_0->GetIDNetWork());
+				}
 			}
 		}
 	}
@@ -252,8 +258,8 @@ void TankPlayer::Update(float gameTime)
 {
 	//Tank
 	Tank::Update(gameTime);
-
-	this->EffectAnimation->Update(gameTime);
+	if (EffectAnimation)
+		this->EffectAnimation->Update(gameTime);
 }
 //Render
 void TankPlayer::Render(Viewport* viewport)

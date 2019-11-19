@@ -155,22 +155,23 @@ namespace PNet
 						std::cout << "Failed to send UDP packet to Client id: "
 							<< i << std::endl;
 					}
-
 				}
 				p._buffer.clear(); //Clean up buffer from the packet p
 			}
+
 			// SEND TCP
 			for (int i = 0; i < serverPtr->totalConnect; i++)
 			{
 				if (!serverPtr->connections[i].isConnect)
 					continue;
-				PacketManager shootPm;
+				PacketManager butlletPm;
 				int num = 0;
 				while (serverPtr->connections[i].pm.HasPendingPackets())
 				{
 					Packet p = serverPtr->connections[i].pm.Retrieve();
-					//gui lap tuc neu # PT_Shoot
-					if (p.GetPacketType() != PacketType::PT_Shoot)
+					//gui lap tuc neu # PT_Bullet
+					if (p.GetPacketType() != PacketType::PT_Bullet && p.GetPacketType() != PacketType::PT_Bullet_Shoot
+						&& p.GetPacketType() != PacketType::PT_Bullet_Shoot)
 					{
 						if (serverPtr->connections[i].socket.Send(p) != PResult::P_Success)
 						{
@@ -180,41 +181,50 @@ namespace PNet
 					}
 					else// gop cac packet shoot lai
 					{
-						shootPm.Append(p);
+						butlletPm.Append(p);
 						num++;
 					}
 				}
-				if (num > 0)// merge cac PT_shoot thanh 1
+				if (num > 0)// merge cac PT_Bullet thanh 1
 				{
-					Packet packet(PacketType::PT_Shoot);
+					Packet packet(PacketType::PT_Bullet);
 					packet.write_bits(num, 6);
-					while (shootPm.HasPendingPackets())
+					while (butlletPm.HasPendingPackets())
 					{
-						Packet p = shootPm.Retrieve();
+						Packet p = butlletPm.Retrieve();
 						int bitIndex = NUM_BIT_PACKET;
 						uint8_t tankID;
 						long timeSend;
 						int x, y, direct;
+						bool isShoot;
 						{// read info
+							isShoot = p.read_bits(bitIndex, 1);
 							tankID = p.read_bits(bitIndex, 3);
 							timeSend = p.read_bits(bitIndex, sizeof(long) * 8);
-							x = p.read_bits(bitIndex, 12);
-							y = p.read_bits(bitIndex, 12);
-							direct = p.read_bits(bitIndex, 2);
+							if (isShoot)
+							{
+								x = p.read_bits(bitIndex, 12);
+								y = p.read_bits(bitIndex, 12);
+								direct = p.read_bits(bitIndex, 2);
+							}
 						}
 
 						// write info
 						{
+							packet.write_bits(isShoot, 1);
 							packet.write_bits(tankID, 3);
 							packet.write_bits(timeSend, sizeof(long) * 8);
-							packet.write_bits(x, 12);
-							packet.write_bits(y, 12);
-							packet.write_bits(direct, 2);				
+							if (isShoot)
+							{
+								packet.write_bits(x, 12);
+								packet.write_bits(y, 12);
+								packet.write_bits(direct, 2);
+							}
 						}
 						p._buffer.clear();
 
 					}
-					// gui PT_Shoot
+					// gui PT_Bullet
 					{
 						if (serverPtr->connections[i].socket.Send(packet) != PResult::P_Success)
 						{
@@ -224,10 +234,7 @@ namespace PNet
 					}
 				}
 			}
-			if (!serverPtr->isStart)
-				Sleep(1);
-			else
-				Sleep(10);
+			Sleep(1);
 		}
 	}
 	void Server::UDP_PacketReciverThread()
@@ -320,13 +327,18 @@ namespace PNet
 		case PacketType::PT_Input:
 		{
 			int bitIndex = NUM_BIT_PACKET;
-			uint8_t clientID;
-			uint16_t packetID;
-			clientID = packet.read_bits(bitIndex, 2);
-			packetID = packet.read_bits(bitIndex, sizeof(uint16_t) * 8);
+			uint8_t clientID = packet.read_bits(bitIndex, 2);
+			uint16_t packetID = packet.read_bits(bitIndex, sizeof(uint16_t) * 8);
 			if (serverPtr->packetReceiveID[clientID] > packetID)
 			{
 				std::cout << "igone PT_Input id:" << packetID << std::endl;
+				break;
+			}
+			long timeSend = packet.read_bits(bitIndex, sizeof(long) * 8);
+			long current = GetTickCount();
+			if (current - timeSend >= Max_Ping)
+			{
+				std::cout << "igone PT_Input id:" << packetID << "ping: " << current - timeSend << std::endl;
 				break;
 			}
 			serverPtr->packetReceiveID[clientID] = packetID;

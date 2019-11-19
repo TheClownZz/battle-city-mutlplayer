@@ -1,19 +1,43 @@
 ﻿#include "Object.h"
-
-
+#include<iostream>
 
 Object::Object()
 {
 }
 
+Object::Object(Object * obj)
+{
+	CopyObject(obj);
+}
 
 Object::~Object()
 {
 }
 
+void Object::UpdatePosition(float gameTime)
+{
+	Update(gameTime);
+}
+
 void Object::New()
 {
 
+}
+
+void Object::CopyObject(Object * obj)
+{
+	this->AllowDraw = obj->AllowDraw;
+	this->bound = obj->bound;
+	this->Damage = obj->Damage;
+	this->Height = obj->Height;
+	this->HP = obj->HP;
+	this->id = obj->id;
+	this->position = obj->position;
+	this->positionStart = obj->positionStart;
+	this->Tag = obj->Tag;
+	this->transform = obj->transform;
+	this->velocity = obj->velocity;
+	this->Width = obj->Width;
 }
 
 bool Object::GetFlipFlag()
@@ -40,13 +64,13 @@ void Object::SetBound(float width, float height)
 	Height = height;
 	bound.left = position.x - width / 2;
 	bound.right = bound.left + width;
-	bound.top = position.y + height/2;
+	bound.top = position.y + height / 2;
 	bound.bottom = bound.top - height;
 }
 void Object::SetBoundZero()
 {
 	//Ngoài màn hình hihi
-	this->bound = {-32, -32, -32, -32};
+	this->bound = { -32, -32, -32, -32 };
 }
 
 //Thông tin frame

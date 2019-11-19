@@ -36,6 +36,12 @@ ObjectManager::~ObjectManager()
 		Boss* boss_0 = ListBoss.at(i);
 		delete boss_0;
 	}
+	//delete item
+	for (size_t i = 0; i < ListItem.size(); i++)
+	{
+		Item* item = ListItem.at(i);
+		delete item;
+	}
 }
 
 //Load Data Game
@@ -54,6 +60,7 @@ void ObjectManager::InitDT(Graphic* graphic, Sound *_sound)
 	map = new Map(SpriteMap);
 	map->New(1);
 	map->SetUIIcon(numPlayer);
+	
 
 	//Boss team
 	Boss *boss_0 = new Boss(SpriteTank, sound, 0);//Boss team 0
@@ -93,6 +100,7 @@ void ObjectManager::ServerCreateObject(int _numPlayer)
 			team = 1;
 		TankPlayer *tankP = new TankPlayer(SpriteTank, sound, team, i);
 		tankP->SetPositionStart(listPos[i]);
+		tankP->map = this->map;
 		ListTank.push_back(tankP);
 	}
 
@@ -105,8 +113,8 @@ void ObjectManager::ServerCreateObject(int _numPlayer)
 		int level = 4 + (rand() % 999) % 4;//Ngẫu nhiên loại Tank
 		TankEnemy *tankE = new TankEnemy(SpriteTank, sound, numPlayer + i, level);
 		tankE->SetPositionStart(listPosEnemy[i]);
+		tankE->map = this->map;
 		ListTank.push_back(tankE);
-		//ListItem.push_back(tankE->GetItemTank());
 		p.write_bits(level, 4);
 	}
 
@@ -143,17 +151,16 @@ void ObjectManager::ClientCreateObject(int _numPlayer, int listLevelEnemy[])
 			team = 1;
 		TankPlayer *tankP = new TankPlayer(SpriteTank, sound, team, i);
 		tankP->SetPositionStart(listPos[i]);
+		tankP->map = this->map;
 		ListTank.push_back(tankP);
 	}
-
-
 	// enemy
 	for (int i = 0; i < NUM_ENEMY; i++)
 	{
 		TankEnemy *tankE = new TankEnemy(SpriteTank, sound, numPlayer + i, listLevelEnemy[i]);
 		tankE->SetPositionStart(listPosEnemy[i]);
+		tankE->map = map;
 		ListTank.push_back(tankE);
-		//ListItem.push_back(tankE->GetItemTank());
 	}
 
 	for (size_t i = 0; i < ListTank.size(); i++)
@@ -169,6 +176,7 @@ void ObjectManager::Update(float gameTime, Keyboard* key)
 {
 	if (numPlayer == 0)
 		return;
+
 	//Kiểm tra va chạm Tank
 	for (size_t i = 0; i < ListTank.size(); i++)
 	{
@@ -207,12 +215,47 @@ void ObjectManager::Update(float gameTime, Keyboard* key)
 	map->SetUITankLife(ListTank, numPlayer);
 	//Update Map
 	map->Update(gameTime);
-
 	//Update Tank
 	for (size_t i = 0; i < ListTank.size(); i++)
 	{
 		ListTank.at(i)->Update(gameTime);
 	}
+
+	// server send event
+	if (Server::serverPtr != NULL)
+	{
+		// send map
+		map->ServerSendUpdateMap();
+		// send item
+		for (size_t i = 0; i < ListItem.size(); i++)
+		{
+			ListItem.at(i)->CreateItem();
+			while (ListItem.at(i)->gamePacket.HasPendingPackets())
+			{
+				Packet p = ListItem.at(i)->gamePacket.Retrieve();
+				for (int j = 0; j < Server::serverPtr->totalConnect; j++)
+				{
+					Server::serverPtr->connections[j].pm.Append(p);
+				}
+			}
+		}
+		// send bullet
+		for (size_t i = 0; i < ListTank.size(); i++)
+		{
+			for (size_t j = 0; j < ListTank.at(i)->GetListBullet().size(); j++)
+			{
+				while (ListTank.at(i)->GetListBullet().at(j)->gamePacket.HasPendingPackets())
+				{
+					Packet p = ListTank.at(i)->GetListBullet().at(j)->gamePacket.Retrieve();
+					for (int k = 0; k < Server::serverPtr->totalConnect; k++)
+					{
+						Server::serverPtr->connections[k].pm.Append(p);
+					}
+				}
+			}
+		}
+	}
+
 }
 //Thông số bắt đầu chơi
 void ObjectManager::Start(int stage)
@@ -301,6 +344,7 @@ int ObjectManager::End()
 		{
 			Server::serverPtr->connections[i].pm.Append(p);
 		}
+		Server::serverPtr->gamePacket.Append(p);
 		cout << "PT_Reset" << endl;
 	}
 	return endGame;

@@ -12,8 +12,6 @@ namespace PNet
 		udpConnection.isConnect = false;
 		packetSendID = 0;
 		packetReceiveID = 0;
-		//HANDLE timeThread= CreateThread(NULL, NULL, 
-		//	(LPTHREAD_START_ROUTINE)ThreadHandleTime,NULL, NULL, NULL); 
 	}
 
 	Client::~Client()
@@ -43,14 +41,14 @@ namespace PNet
 		{
 			std::cout << "Successfully connected to server!" << std::endl;
 			tcpConnection.isConnect = true;
-			HANDLE tpcReciveThead, udpReciveThead, senderThead;
+			HANDLE tpcReciveThead, udpReciveThead, tcpThead;
 			tpcReciveThead=CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)TCP_PacketReciverThread, NULL, NULL, NULL);
 			udpReciveThead =CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)UDP_PacketReciverThread, NULL, NULL, NULL);
-			senderThead = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)PacketSenderThread, NULL, NULL, NULL);
-			
+			tcpThead = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)PacketSenderThread, NULL, NULL, NULL);
+
 			listThread.push_back(tpcReciveThead);
 			listThread.push_back(udpReciveThead);
-			listThread.push_back(senderThead);
+			listThread.push_back(tcpThead);
 
 			Packet timePacket(PacketType::PT_Time);
 			uint32_t t1 = GetTickCount();
@@ -98,7 +96,7 @@ namespace PNet
 			if (result != PResult::P_Success)
 				break;
 			ProcessPacket(packet, time, clientPtr->tcpConnection);
-			Sleep(5);
+			Sleep(1);
 		}
 		std::cout << "Lost connection to Server: " << std::endl;
 		clientPtr->tcpConnection.isConnect = false;
@@ -137,7 +135,7 @@ namespace PNet
 				}
 				ProcessPacket(packet, time, clientPtr->udpConnection);
 			}
-			Sleep(5);
+			Sleep(1);
 		}
 	}
 	void Client::PacketSenderThread()
@@ -153,16 +151,16 @@ namespace PNet
 
 			if (!clientPtr->tcpConnection.isConnect)
 				continue;
-			//// send udp packet
+			// send udp packet
 			while (clientPtr->udpConnection.pm.HasPendingPackets())
 			{
 				sockaddr_in addr = clientPtr->serverIp.GetSockaddrIPv4();
 				Packet p = clientPtr->udpConnection.pm.Retrieve();
-				if(clientPtr->udpConnection.socket.SendTo(p,addr,sizeof(addr)) != PResult::P_Success)
+				if (clientPtr->udpConnection.socket.SendTo(p, addr, sizeof(addr)) != PResult::P_Success)
 					std::cout << "Failed to send UDP packet to server: " << std::endl;
 				p._buffer.clear(); //Clean up buffer from the packet p
 			}
-			//// send tcp packet
+			// send tcp packet
 			while (clientPtr->tcpConnection.pm.HasPendingPackets())
 			{
 				Packet p = clientPtr->tcpConnection.pm.Retrieve();
@@ -172,9 +170,10 @@ namespace PNet
 				}
 				p._buffer.clear(); //Clean up buffer from the packet p
 			}
-			Sleep(5);
+			Sleep(1);
 		}
 	}
+
 	bool Client::ProcessPacket(Packet & packet, long timeRecive, Connection &connection)
 	{
 		if (clientPtr == NULL)
@@ -196,7 +195,7 @@ namespace PNet
 			long lag1, lag2;
 			lag1 = My_ABS(t2 - t1);
 			lag2 = My_ABS(t4 - t3);
-			if (My_ABS(lag1 - lag2) > Min_Time_Ping)
+			if (My_ABS(lag1 - lag2) > Min_Ping)
 			{
 				std::cout << "Sync time dont exact, request server again" << timeDifference << std::endl;
 				Packet timePacket(PacketType::PT_Time);
@@ -272,9 +271,9 @@ namespace PNet
 			clientPtr->gamePacket.Append(p);
 			break;
 		}
-		case PacketType::PT_Shoot:
+		case PacketType::PT_Bullet:
 		{
-			Packet p(PacketType::PT_Shoot);
+			Packet p(PacketType::PT_Bullet);
 			p._buffer = packet._buffer;
 			clientPtr->gamePacket.Append(p);
 			break;
@@ -289,14 +288,5 @@ namespace PNet
 			return false;
 		}
 		return true;
-	}
-	void Client::ThreadHandleTime()
-	{
-		while (true)
-		{
-			Sleep(500);
-			/*long time = GetTickCount();
-			std::cout << "Time:" << time + timeDifference << std::endl;*/
-		}
 	}
 }

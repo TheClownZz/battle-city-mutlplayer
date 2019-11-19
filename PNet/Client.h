@@ -20,7 +20,6 @@ namespace PNet
 		static void UDP_PacketReciverThread();
 		static void PacketSenderThread();
 		static bool ProcessPacket(Packet & packet, long timeRecive, Connection &connection);
-		static void ThreadHandleTime();	
 	private:
 		IPEndpoint serverIp;
 		std::vector<HANDLE> listThread;

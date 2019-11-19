@@ -41,51 +41,49 @@ void ProcessPacket(Packet & packet, Game &game)
 		TankProperties listProperties[4 + NUM_ENEMY];
 		for (int i = 0; i < Client::clientPtr->numPlayer + NUM_ENEMY; i++)
 		{
-			uint8_t state, bState;
-			int x, y, direct, bx, by, bDirect;
-			bool isBlock;
+			uint8_t state;
+			int x, y, direct, dx, dy;
 			x = packet.read_bits(bitIndex, 12);
 			y = packet.read_bits(bitIndex, 12);
 			state = packet.read_bits(bitIndex, 4);
-			isBlock = packet.read_bits(bitIndex, 1);
 			direct = packet.read_bits(bitIndex, 2);
+			dx = packet.read_bits(bitIndex, 2);
+			dy = packet.read_bits(bitIndex, 2);
 
 			listProperties[i].x = (float)x / 10;
 			listProperties[i].y = (float)y / 10;
 			listProperties[i].state = (Statetank)state;
-			listProperties[i].isBlock = isBlock;
 			listProperties[i].direct = direct;
-
-			/*bx = packet.read_bits(bitIndex, 12);
-			by = packet.read_bits(bitIndex, 12);
-			bState = packet.read_bits(bitIndex, 1);
-			bDirect = packet.read_bits(bitIndex, 2);
-
-			listProperties[i].bullet.x = (float)bx / 10;
-			listProperties[i].bullet.y = (float)by / 10;
-			listProperties[i].bullet.state = bState;
-			listProperties[i].bullet.direct = bDirect;*/
+			listProperties[i].dx = dx - 1;
+			listProperties[i].dy = dy - 1;
 		}
 		game.UpdateTankProperties(timeSend, listProperties);
 		break;
 	}
-	case PacketType::PT_Shoot:
+	case PacketType::PT_Bullet:
 	{
 		int bitIndex = NUM_BIT_PACKET;
 		int num = packet.read_bits(bitIndex, 6);
 		for (int i = 0; i < num; i++)
 		{
-			uint8_t tankID;
 			BulletProperties bulletP;
 			int x, y;
-			tankID = packet.read_bits(bitIndex, 3);
+			bool isShoot = packet.read_bits(bitIndex, 1);
+			uint8_t tankID = packet.read_bits(bitIndex, 3);
 			bulletP.timeSend = packet.read_bits(bitIndex, sizeof(long) * 8);
-			x = packet.read_bits(bitIndex, 12);
-			y = packet.read_bits(bitIndex, 12);
-			bulletP.x = (float)x / 10;
-			bulletP.y = (float)y / 10;
-			bulletP.direct = packet.read_bits(bitIndex, 2);
-			game.Shoot(tankID, bulletP);
+			if (isShoot)
+			{
+				x = packet.read_bits(bitIndex, 12);
+				y = packet.read_bits(bitIndex, 12);
+				bulletP.x = (float)x / 10;
+				bulletP.y = (float)y / 10;
+				bulletP.direct = packet.read_bits(bitIndex, 2);
+				game.Shoot(tankID, bulletP);
+			}
+			else
+			{
+				game.BurstingBullet(tankID, bulletP.timeSend);
+			}
 		}
 		break;
 	}
@@ -219,12 +217,13 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 						if (gameTime >= frame_rate)
 						{
 							startTime = endTime;
+							game.Update(gameTime);
 							while (Client::clientPtr->gamePacket.HasPendingPackets())
 							{
 								Packet p = Client::clientPtr->gamePacket.Retrieve();
 								ProcessPacket(p, game);
+								p._buffer.clear();
 							}
-							game.Update(gameTime);
 							game.Render();
 						}
 						else

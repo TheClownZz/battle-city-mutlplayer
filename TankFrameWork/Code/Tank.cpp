@@ -3,7 +3,7 @@
 #include<PNet\Packet.h>
 #include<iostream>
 #include "Tank.h"
-
+#include"Map.h"
 inline int RoundingNumber(float x, float number)
 {
 	int x1 = (x + number / 2) / number;
@@ -21,15 +21,52 @@ Tank::Tank(Sprite* sprite, Sound* sound, int _id)
 	this->TankSpeed = RunSpeed;
 	this->idNetWork = _id;
 	this->numBulletColision = 0;
-	this->TimeShootColdown = DEFAULT_SHOOT_COLDOWN;
+	this->TimeShootColdown = 0.75f* DEFAULT_SHOOT_COLDOWN;
 	this->TimeShootLag = 0;
 	this->AllowSetlag = false;
 }
 
+Tank::Tank(Tank * tank)
+{
+	Bullet *b = new Bullet(tank->ListBullet.at(0));
+	this->ListBullet.push_back(b);
+	CopyTank(tank);
+	this->TankAnimation = NULL;
+
+}
+
+void Tank::CopyTank(Tank * tank)
+{
+	CopyObject(tank);
+	this->AllowSetlag = tank->AllowSetlag;
+	this->DirectionTank = tank->DirectionTank;
+	this->idNetWork = tank->idNetWork;
+	this->Immortal = tank->Immortal;
+	this->Level = tank->Level;
+	this->Life = tank->Life;
+	this->numBulletColision = tank->numBulletColision;
+	this->ReLoad = tank->ReLoad;
+	this->Shoot = tank->Shoot;
+	this->StateTank = tank->StateTank;
+	this->TankSpeed = tank->TankSpeed;
+	this->Team = tank->Team;
+	this->TimeAppear = tank->TimeAppear;
+	this->TimeBleed = tank->TimeBleed;
+	this->TimeDie = tank->TimeDie;
+	this->TimeImmortal = tank->TimeImmortal;
+	this->TimeShoot = tank->TimeShoot;
+	this->TimeShootColdown = tank->TimeShootColdown;
+	this->TimeShootLag = tank->TimeShootLag;
+	this->TimeMove = tank->TimeMove;
+	this->TimeChangeMove = tank->TimeChangeMove;
+	ListBullet.at(0)->CopyBullet(tank->ListBullet.at(0));
+
+}
 
 Tank::~Tank()
 {
-	delete TankAnimation;
+	if (TankAnimation != NULL)
+		delete TankAnimation;
 }
 
 vector <Bullet*> Tank::GetListBullet()
@@ -124,16 +161,24 @@ void Tank::SetImmortal(bool immortal)
 	this->Immortal = immortal;
 }
 
-
-void Tank::SetLockMove(bool lockmove)
-{
-}
-
 void Tank::SetShoot(bool isShoot, BulletProperties bulletP)
 {
 	this->Shoot = isShoot;
 	queue_bulletP.clear();
 	queue_bulletP.push_back(bulletP);
+}
+
+void Tank::SetBurstingBullet(long timeSend)
+{
+	if (ListBullet.size() <= 0)
+		return;
+	Bullet *b = ListBullet.at(0);
+	if (b->GetState() == Bullet::Bursting)
+		return;
+	long current = GetTickCount();
+	float lag = ((float)(current + Client::timeDifference - timeSend));
+	b->SetState(Bullet::Bursting);
+	b->SetTimeBurst(lag);
 }
 
 //Lấy trạng thái
@@ -180,7 +225,8 @@ void Tank::ChangeAnimation(float gameTime)
 	{
 		this->SetBoundZero();
 		this->SetVelocity(0.0f, 0.0f);
-		this->TankAnimation->SetFrame(this->position, false, 100, 261, 264);
+		if (TankAnimation != NULL)
+			this->TankAnimation->SetFrame(this->position, false, 100, 261, 264);
 		//Animation lặp lại 3 lần vào trạng thái đứng yên
 		this->TimeAppear += gameTime;
 		if (TimeAppear >= 1500 && Server::serverPtr != NULL)
@@ -207,7 +253,8 @@ void Tank::ChangeAnimation(float gameTime)
 	{
 		this->SetVelocity(0.0f, 0.0f);
 		//Đứng yên theo hướng vừa Run
-		this->TankAnimation->SetFrame(this->position, false, 0, DirectionTank * 2 + tank_sprite, DirectionTank * 2 + tank_sprite);
+		if (TankAnimation != NULL)
+			this->TankAnimation->SetFrame(this->position, false, 0, DirectionTank * 2 + tank_sprite, DirectionTank * 2 + tank_sprite);
 		break;
 	}
 	case Statetank::RunningUp:
@@ -220,7 +267,8 @@ void Tank::ChangeAnimation(float gameTime)
 
 		this->DirectionTank = 0;
 		//Di chuyển lên frame 0, 1 delay 100
-		this->TankAnimation->SetFrame(this->position, false, RunDelay, 0 + tank_sprite, 1 + tank_sprite);
+		if (TankAnimation)
+			this->TankAnimation->SetFrame(this->position, false, RunDelay, 0 + tank_sprite, 1 + tank_sprite);
 		break;
 	}
 	case Statetank::RunningLeft:
@@ -233,7 +281,8 @@ void Tank::ChangeAnimation(float gameTime)
 
 		this->DirectionTank = 1;
 		//Di chuyển trái frame 2, 3 delay 100
-		this->TankAnimation->SetFrame(this->position, false, RunDelay, 2 + tank_sprite, 3 + tank_sprite);
+		if (TankAnimation != NULL)
+			this->TankAnimation->SetFrame(this->position, false, RunDelay, 2 + tank_sprite, 3 + tank_sprite);
 		break;
 	}
 	case Statetank::RunningDown:
@@ -246,7 +295,8 @@ void Tank::ChangeAnimation(float gameTime)
 
 		this->DirectionTank = 2;
 		//Di chuyển xuống frame 4, 5 delay 100
-		this->TankAnimation->SetFrame(this->position, false, RunDelay, 4 + tank_sprite, 5 + tank_sprite);
+		if (TankAnimation != NULL)
+			this->TankAnimation->SetFrame(this->position, false, RunDelay, 4 + tank_sprite, 5 + tank_sprite);
 		break;
 	}
 	case Statetank::RunningRight:
@@ -259,7 +309,8 @@ void Tank::ChangeAnimation(float gameTime)
 
 		this->DirectionTank = 3;
 		//Di chuyển phải frame 6, 7 delay 100
-		this->TankAnimation->SetFrame(this->position, false, RunDelay, 6 + tank_sprite, 7 + tank_sprite);
+		if (TankAnimation != NULL)
+			this->TankAnimation->SetFrame(this->position, false, RunDelay, 6 + tank_sprite, 7 + tank_sprite);
 		break;
 	}
 	//Bị đồng đội bắn trúng
@@ -292,7 +343,8 @@ void Tank::ChangeAnimation(float gameTime)
 		if (this->numBulletColision > 0)
 			this->SetBoundZero();
 		this->SetVelocity(0.0f, 0.0f);
-		this->TankAnimation->SetFrame(this->position, false, DieDelay, 306, 311);
+		if (TankAnimation != NULL)
+			this->TankAnimation->SetFrame(this->position, false, DieDelay, 306, 311);
 		//
 		this->TimeDie += gameTime;
 		if (TimeDie >= 1000)
@@ -350,37 +402,27 @@ void Tank::ServerShoot(float gametime, int bulletID)
 	this->ReLoad = true;
 
 	ListBullet.at(bulletID)->NewBullet(this->position, this->DirectionTank, this->Level);
-	D3DXVECTOR2 _velocity = ListBullet.at(bulletID)->GetVelocity();
-	D3DXVECTOR2 _position = ListBullet.at(bulletID)->GetPosition();
-	_position.x += TimeShootLag * _velocity.x;
-	_position.y += TimeShootLag * _velocity.y;
-
-	ListBullet.at(bulletID)->SetPosition(_position);
+	this->map->OnCollision(ListBullet.at(bulletID), this->Level, TimeShootLag);
+	ListBullet.at(bulletID)->Update(TimeShootLag);
 	this->TimeShoot += TimeShootLag;
-
-	ListBullet.at(bulletID)->ChangeAnimation(gametime);
-
 	// Server send 
 	{
-		Packet p(PacketType::PT_Shoot);
-		uint8_t tankID = (uint8_t)GetIDNetWork();
+		Packet p(PacketType::PT_Bullet_Shoot);
 		long timeSend = GetTickCount();
+		uint8_t tankID = (uint8_t)GetIDNetWork();
 		int x, y;
 		x = ListBullet.at(bulletID)->GetPosition().x * 10;
 		y = ListBullet.at(bulletID)->GetPosition().y * 10;
+		p.write_bits(true, 1);
 		p.write_bits(tankID, 3);
 		p.write_bits(timeSend, sizeof(long) * 8);
 		p.write_bits(x, 12);
 		p.write_bits(y, 12);
 		p.write_bits(this->DirectionTank, 2);
-
-		for (int i = 0; i < Server::serverPtr->totalConnect; i++)
-		{
-			Server::serverPtr->connections[i].pm.Append(p);
-		}
+		ListBullet.at(bulletID)->gamePacket.Append(p);
 	}
 }
-// not use
+
 void Tank::ClientShoot(float gametime, int bulletID)
 {
 	if (queue_bulletP.size() <= 0)
@@ -390,19 +432,12 @@ void Tank::ClientShoot(float gametime, int bulletID)
 	BulletProperties bulletP = queue_bulletP.front();
 	ListBullet.at(bulletID)->NewBullet(D3DXVECTOR2(bulletP.x, bulletP.y),
 		bulletP.direct, this->Level);
-	D3DXVECTOR2 _velocity = ListBullet.at(bulletID)->GetVelocity();
-	D3DXVECTOR2 _position = ListBullet.at(bulletID)->GetPosition();
-
 	long current = GetTickCount();
-	float lag = ((float)(current + Client::timeDifference - bulletP.timeSend)) / 1000;
-
-	_position.x += lag * _velocity.x;
-	_position.y += lag * _velocity.y;
-	ListBullet.at(bulletID)->SetPosition(_position);
-
+	float lag = ((float)(current + Client::timeDifference - bulletP.timeSend));
+	this->map->OnCollision(ListBullet.at(bulletID), this->Level, lag);
+	ListBullet.at(bulletID)->Update(lag);
 	this->TimeShoot += lag;
 
-	ListBullet.at(bulletID)->ChangeAnimation(gametime);
 	queue_bulletP.clear();
 }
 
@@ -412,19 +447,9 @@ TankProperties Tank::GetProperties()
 	p.x = this->position.x;
 	p.y = this->position.y;
 	p.state = this->GetState();
-	if (velocity.x == 0 && velocity.y == 0)
-		p.isBlock = true;
-	else
-		p.isBlock = false;
 	p.direct = this->DirectionTank;
-	/*if (ListBullet.size() > 0)
-	{
-		Bullet *bullet = ListBullet.at(0);
-		p.bullet.x = bullet->GetPosition().x;
-		p.bullet.y = bullet->GetPosition().y;
-		p.bullet.state = bullet->GetState();
-		p.bullet.direct = bullet->GetDirection();
-	}*/
+	p.dx = (int)(velocity.x / TankSpeed);
+	p.dy = (int)(velocity.y / TankSpeed);
 	return p;
 }
 
@@ -468,26 +493,20 @@ void Tank::SetProperties(TankProperties p, float lag)
 		this->New();
 		this->TimeAppear += lag;
 	}
-	D3DXVECTOR2 velocity = GetVelocity(p.state);
-	if (VectorDistance(this->position, D3DXVECTOR2(p.x + lag * velocity.x, p.y + lag * velocity.y)) > MaxDistance)
-	{
-		if (!p.isBlock)
-		{
-			this->SetPositionX(p.x + lag * velocity.x);
-			this->SetPositionY(p.y + lag * velocity.y);
-		}
-		else
-		{
-			this->SetPositionX(p.x);
-			this->SetPositionY(p.y);
 
-		}
+	float d = VectorDistance(this->position,
+		D3DXVECTOR2(p.x + lag / 100 * p.dx, p.y + lag / 100 * p.dx));
+	D3DXVECTOR2 pos = GetPosition();
+	if (d > MaxDistance)
+	{
+		this->SetPosition(D3DXVECTOR2(p.x, p.y));
+		SetVelocity(D3DXVECTOR2(TankSpeed* p.dx, TankSpeed* p.dy));
+		map->OnCollision(this, lag);
+		Object::Update(lag);
 	}
 
 	this->StateTank = p.state;
 	this->DirectionTank = p.direct;
-
-	//SetBulletProperties(p.bullet, lag);
 }
 
 void Tank::SetBulletProperties(TankBulletProperties p, float lag)
@@ -558,7 +577,8 @@ void Tank::Update(float gameTime)
 {
 	//Tank
 	Object::Update(gameTime);
-	this->TankAnimation->Update(gameTime);
+	if (TankAnimation)
+		this->TankAnimation->Update(gameTime);
 
 	//Bullet
 	for (size_t i = 0; i < ListBullet.size(); i++)

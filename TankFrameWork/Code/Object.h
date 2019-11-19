@@ -4,7 +4,6 @@
 #include "Sound.h"
 #include "Sprite.h"
 #include "Collision.h"
-
 class Object
 {
 protected:
@@ -19,7 +18,6 @@ protected:
 	float angle;
 	RECT bound;
 	int HP, Damage;
-
 public:
 	int id;
 	enum tag
@@ -34,12 +32,14 @@ public:
 		tree,
 		ice,
 		river,
-		
+
 	}Tag;
 
 	Object();
+	Object(Object *obj);
 	~Object();
-
+	void UpdatePosition(float gameTime);
+	void CopyObject(Object *obj);
 	virtual bool GetFlipFlag();
 	virtual void SetFlipFlag(bool flag);
 	//Khung va chạm

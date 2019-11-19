@@ -1,4 +1,6 @@
 ﻿#include<PNet/Constants.h>
+#include<PNet\Server.h>
+#include<PNet\Packet.h>
 #include "Bullet.h"
 using namespace PNet;
 
@@ -14,10 +16,26 @@ Bullet::Bullet(Sprite* sprite, Sound* sound)
 	this->AllowDraw = false;
 }
 
+Bullet::Bullet(Bullet *_bullet)
+{
+	CopyBullet(_bullet);
+	this->BulletAnimation = NULL;
+}
+
+
+void Bullet::CopyBullet(Bullet * _bullet)
+{
+	CopyObject(_bullet);
+	this->DirectionBullet = _bullet->DirectionBullet;
+	this->SpriteBullet = _bullet->SpriteBullet;
+	this->StateBullet = _bullet->StateBullet;
+	this->TimeBurst = _bullet->TimeBurst;
+}
 
 Bullet::~Bullet()
 {
-	delete BulletAnimation;
+	if (BulletAnimation != NULL)
+		delete BulletAnimation;
 }
 
 //Lấy trạng thái
@@ -52,7 +70,7 @@ void Bullet::NewBullet(D3DXVECTOR2 position_tank, int direction_tank, int level)
 
 	switch (direction_tank)
 	{
-	//Tank Up
+		//Tank Up
 	case 0:
 	{
 		this->position.x = position_tank.x;
@@ -92,7 +110,7 @@ void Bullet::NewBullet(D3DXVECTOR2 position_tank, int direction_tank, int level)
 	default:
 		break;
 	}
-	
+
 	this->SetBound(3, 3);
 }
 
@@ -106,7 +124,8 @@ void Bullet::ChangeAnimation(float gameTime)
 	case Bullet::Firing:
 	{
 		this->SetBound(3, 3);
-		this->BulletAnimation->SetFrame(this->position, false, 0, SpriteBullet, SpriteBullet);
+		if (BulletAnimation != NULL)
+			this->BulletAnimation->SetFrame(this->position, false, 0, SpriteBullet, SpriteBullet);
 		break;
 	}
 
@@ -114,7 +133,8 @@ void Bullet::ChangeAnimation(float gameTime)
 	{
 		this->SetBoundZero();
 		this->SetVelocity(0.0f, 0.0f);
-		this->BulletAnimation->SetFrame(this->position, false, 60, 306, 308);
+		if (BulletAnimation != NULL)
+			this->BulletAnimation->SetFrame(this->position, false, 60, 306, 308);
 		//Kết thúc việc bắn
 		this->TimeBurst += gameTime;
 		if (TimeBurst >= 200)
@@ -179,7 +199,8 @@ void Bullet::Update(float gameTime)
 	ChangeAnimation(gameTime);
 
 	Object::Update(gameTime);
-	this->BulletAnimation->Update(gameTime);
+	if (BulletAnimation != NULL)
+		this->BulletAnimation->Update(gameTime);
 
 	//Kiểm tra ngoài màn  hình
 	if (!(position.x > 16 && position.x < 224 && position.y > 8 && position.y < 232))
@@ -195,6 +216,17 @@ void Bullet::Render(Viewport* viewport)
 	if (!AllowDraw)
 		return;
 	this->BulletAnimation->Render(viewport);
+}
+
+void Bullet::SendBurstingBullet(int networkID)
+{
+	Packet p(PacketType::PT_Bullet_Exploision);
+	long timeSend = GetTickCount();
+	uint8_t tankID = (uint8_t)networkID;
+	p.write_bits(false, 1);
+	p.write_bits(tankID, 3);
+	p.write_bits(timeSend, sizeof(long) * 8);
+	gamePacket.Append(p);
 }
 
 

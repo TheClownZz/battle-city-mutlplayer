@@ -3,15 +3,9 @@
 
 class TankEnemy : public Tank
 {
-protected:
-	float TimeLock, TimeChangeMove, TimeMove;
-	bool LockMove;
 public:
 	TankEnemy(Sprite* sprite, Sound* sound, int _id, int level = 4);
 	~TankEnemy();
-
-
-	void SetLockMove(bool lockmove);
 
 	//Kiểm tra HP
 	void CheckHP();

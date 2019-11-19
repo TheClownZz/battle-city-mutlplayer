@@ -3,6 +3,7 @@
 #include "Map.h"
 #include<iostream>
 #pragma warning(disable : 4996)
+const float TIME_UPDATE_MAP = 0.5f;
 
 //id = 0 không có gì hết
 //id = 1 Gạch nguyên
@@ -19,16 +20,92 @@ void Map::UpdateTileMap(vector<TileInfo> serverMap, long timeSend, int _stageInd
 {
 	if (_stageIndex != this->stageIndex)
 		return;
+
 	//loai bo cac cap nhap o client
+	{
+		int endPos = -1;
+		for (size_t i = 0; i < listTile.size(); i++)
+		{
+			if (listTile.at(i).timeSave + Max_Ping  <= timeSend)
+			{
+				int x, y;
+				x = listTile.at(i).x;
+				y = listTile.at(i).y;
+				this->MapMatrix[y][x] = listTile.at(i).value;
+				endPos = i + 1;
+			}
+			else
+				break;
+		}
+		if (endPos > 0)
+			listTile.erase(listTile.begin(), listTile.begin() + endPos);
+	}
+	//cap nhap lai tu server
+	for (size_t i = 0; i < serverMap.size(); i++)
+	{
+		int x = serverMap.at(i).x;
+		int y = serverMap.at(i).y;
+		int pos = -1;
+		for (size_t j = 0; j < listTile.size(); j++)
+		{
+			if (listTile.at(j).x == x && listTile.at(j).y == y)
+			{
+				pos = j;
+				break;
+			}
+		}
+		if (pos == -1 || listTile.at(pos).timeSave + Max_Ping < timeSend)
+		{
+			this->MapMatrix[y][x] = serverMap.at(i).value;
+			if (pos != -1)
+				listTile.erase(listTile.begin() + pos, listTile.begin() + pos + 1);
+		}
+	}
+}
+
+void Map::ServerSendUpdateMap()
+{
+	long time = GetTickCount();
+	if ((float)(time - timeSend) / 1000.0f < TIME_UPDATE_MAP)
+		return;
+
+	timeSend = time;
+	if (listTile.size() == 0)
+		return;
+	// sap xep theo thoi gian
+	std::sort(listTile.begin(), listTile.end());
+
+	Packet p(PacketType::PT_UpdateMap);
+	int size = listTile.size();
 	int endPos = -1;
 	for (size_t i = 0; i < listTile.size(); i++)
 	{
-		if (listTile.at(i).timeSave <= timeSend)
+		if (timeSend - listTile.at(i).timeSave >= Min_Ping)
+			endPos = i + 1;
+		else
+			break;
+	}
+	if (endPos == -1)
+		return;
+	p.write_bits(endPos, 8);
+	p.write_bits(stageIndex, 6);
+	p.write_bits(time, sizeof(long) * 8);
+
+	for (int i = 0; i < endPos; i++)
+	{
+		p.write_bits(listTile.at(i).x, 6);
+		p.write_bits(listTile.at(i).y, 5);
+		p.write_bits(listTile.at(i).value, 3);
+	}
+
+	for (int i = 0; i < Server::serverPtr->totalConnect; i++)
+		Server::serverPtr->connections[i].pm.Append(p);
+	// xoa tile qua 2 x TIME_UPDATE_MAP
+	endPos = -1;
+	for (size_t i = 0; i < listTile.size(); i++)
+	{
+		if (timeSend - listTile.at(i).timeSave >= 2000 * TIME_UPDATE_MAP)
 		{
-			int x, y;
-			x = listTile.at(i).x;
-			y = listTile.at(i).y;
-			this->MapMatrix[y][x] = listTile.at(i).value;
 			endPos = i + 1;
 		}
 		else
@@ -36,14 +113,7 @@ void Map::UpdateTileMap(vector<TileInfo> serverMap, long timeSend, int _stageInd
 	}
 	if (endPos >= 0)
 		listTile.erase(listTile.begin(), listTile.begin() + endPos);
-	//cap nhap lai tu server
-	for (size_t i = 0; i < serverMap.size(); i++)
-	{
-		int x, y;
-		x = serverMap.at(i).x;
-		y = serverMap.at(i).y;
-		this->MapMatrix[y][x] = serverMap.at(i).value;
-	}
+
 }
 
 void Map::SaveTile(int x, int y, int value)
@@ -76,29 +146,6 @@ void Map::SaveTile(int x, int y, int value)
 
 }
 
-void Map::ServerSendUpdateMap()
-{
-	long time = GetTickCount();
-	if ((float)(time - timeSend) / 1000.0f < TIME_UPDATE_MAP)
-		return;
-	timeSend = time;
-	if (listTile.size() == 0)
-		return;
-	Packet p(PacketType::PT_UpdateMap);
-	int size = listTile.size();
-	p.write_bits(size, 8);
-	p.write_bits(stageIndex, 6);
-	p.write_bits(time, sizeof(long) * 8);
-	for (size_t i = 0; i < listTile.size(); i++)
-	{
-		p.write_bits(listTile.at(i).x, 6);
-		p.write_bits(listTile.at(i).y, 5);
-		p.write_bits(listTile.at(i).value, 3);
-	}
-	for (int i = 0; i < Server::serverPtr->totalConnect; i++)
-		Server::serverPtr->connections[i].pm.Append(p);
-	listTile.clear();
-}
 
 Map::Map(Sprite* Sprite)
 {
@@ -108,12 +155,42 @@ Map::Map(Sprite* Sprite)
 	timeSend = 0;
 	stageIndex = 0;
 }
+Map::Map(Map *map)
+{
+	this->listTile = map->listTile;
+	this->Width = map->Width;
+	this->Height = map->Height;
+	this->TileWidth = map->TileWidth;
+	this->TileHeight = map->TileHeight;
 
+	this->MapMatrix = new int*[this->Width];
+	for (int i = 0; i < this->Width; i++)
+		this->MapMatrix[i] = new int[this->Height];
+
+	for (int h = 0; h < this->Height; h++)
+		for (int w = 0; w < this->Width; w++)
+			this->MapMatrix[h][w] = map->MapMatrix[h][w];
+
+	this->object_0 = new Object(map->object_0);
+	this->object_1 = new Object(map->object_1);
+
+	this->sprite = map->sprite;
+	this->stageIndex = map->stageIndex;
+}
 
 Map::~Map()
 {
 	delete object_0;
 	delete object_1;
+}
+
+void Map::CopyMap(Map * map)
+{
+	this->listTile = map->listTile;
+	this->stageIndex = map->stageIndex;
+	for (int h = 0; h < this->Height; h++)
+		for (int w = 0; w < this->Width; w++)
+			this->MapMatrix[h][w] = map->MapMatrix[h][w];
 }
 
 void Map::ReadMap(const char *path)
@@ -202,13 +279,7 @@ void Map::New(int level)
 	}
 
 }
-//
-bool Map::isChangMetalWall()
-{
-	this->TimeChangeMetalWall = 0.0f;
-	this->ChangMetalWall = true;
-	return true;
-}
+
 //SetMetalWall0
 void Map::SetWallTeam0(int id)
 {
@@ -510,11 +581,6 @@ void Map::OnCollision(std::vector <Tank*> &ListTank, float gameTime)
 		FindObjectMap(ListTank.at(i), ListTank.at(i)->GetDirection(), x0, y0, x1, y1);
 
 		//Kiểm tra object va chạm
-		//đi vào băng
-		//if (this->MapMatrix[y0][x0] == 8)
-		//{
-		//	//Chưa xử lí
-		//}
 
 		//wall cản
 		ListTank.at(i)->OnCollision(object_0, gameTime);
@@ -569,7 +635,7 @@ void Map::OnCollision(std::vector <Tank*> &ListTank, float gameTime)
 
 				ListTank.at(i)->GetListBullet().at(j)->SetState(Bullet::Bursting);
 			}
-			
+
 			if (id0 != this->MapMatrix[y0][x0])
 			{
 				if (Server::serverPtr != NULL)
@@ -589,6 +655,82 @@ void Map::OnCollision(std::vector <Tank*> &ListTank, float gameTime)
 		}//end for j
 
 	}//end for i
+}
+
+void Map::OnCollision(Bullet * bullet, int level, float gameTime)
+{
+	if (!bullet->GetAllowDraw())
+		return;
+	int x0, y0, x1, y1;
+	int direction = bullet->GetDirection();
+	FindObjectMap(bullet, direction, x0, y0, x1, y1);
+	int id0 = this->MapMatrix[y0][x0];
+	int id1 = this->MapMatrix[y1][x1];
+
+	//Nếu là tường
+	if (id0 > 0 && id0 < 7 &&
+		bullet->OnCollision(object_0, gameTime))
+	{
+		//Nếu là tường đơn 
+		if (id0 > 1 && id0 < 6)
+		{
+			this->MapMatrix[y0][x0] = 0;
+		}
+		//Nếu là tường nguyên
+		else if (id0 == 1)
+		{
+			this->MapMatrix[y0][x0] += direction + 1;
+		}
+		//Nếu là Metal và Level tăng max
+		else if (id0 == 6 && level == 3) //Đạn level 3 mới bể Metal
+		{
+			this->MapMatrix[y0][x0] = 0;
+		}
+
+		bullet->SetState(Bullet::Bursting);
+	}
+	if (id1 > 0 && id1 < 7 &&
+		bullet->OnCollision(object_1, gameTime))
+	{
+		if (id1 > 1 && id1 < 6)
+		{
+			this->MapMatrix[y1][x1] = 0;
+		}
+		else if (id1 == 1)
+		{
+			this->MapMatrix[y1][x1] += direction + 1;
+		}
+		else if (id1 == 6 && level == 3)
+		{
+			this->MapMatrix[y1][x1] = 0;
+		}
+
+		bullet->SetState(Bullet::Bursting);
+	}
+
+	if (id0 != this->MapMatrix[y0][x0])
+	{
+		if (Server::serverPtr != NULL)
+			SaveTile(x0, y0, this->MapMatrix[y0][x0]);
+		else
+			SaveTile(x0, y0, id0);
+	}
+
+	if (id1 != this->MapMatrix[y1][x1])
+	{
+		if (Server::serverPtr != NULL)
+			SaveTile(x1, y1, this->MapMatrix[y1][x1]);
+		else
+			SaveTile(x1, y1, id1);
+	}
+}
+
+void Map::OnCollision(Tank * tank, float gameTime)
+{
+	int x0, y0, x1, y1;
+	FindObjectMap(tank, tank->GetDirection(), x0, y0, x1, y1);
+	tank->OnCollision(object_0, gameTime);
+	tank->OnCollision(object_1, gameTime);
 }
 
 //Update
@@ -619,8 +761,6 @@ void Map::Update(float gameTime)
 			SetWallTeam1(1);
 		}
 	}
-	if (Server::serverPtr != NULL)
-		ServerSendUpdateMap();
 }
 
 //Render

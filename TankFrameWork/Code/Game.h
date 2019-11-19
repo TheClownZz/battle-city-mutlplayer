@@ -1,10 +1,14 @@
 ﻿#pragma once
+#ifndef GAME_H
+#define GAME_H
+#include<Server/SaveWorld.h>
 #include "Graphic.h"
 #include "Keyboard.h"
 #include "Scene.h"
 #include "GameDefine.h"
 #include "SoundTank.h"
 #include <Windows.h>
+class SaveWorld;
 using namespace Define;
 using namespace PNet;
 class Game
@@ -32,7 +36,7 @@ private:
 	long timeSend;
 
 public:
-	
+	vector<InputState> listInput;
 	Game(HINSTANCE Hins, int width, int height, char* name, uint8_t id = UNDEFINE_ID);
 	~Game();
 	//Thiết lập các giá trị cho cửa sổ
@@ -44,15 +48,22 @@ public:
 	//Vẽ Object lên màn hình
 	void Render();
 	void CreateObject(uint8_t numPlayer, uint8_t id, int listLevelEnemy[] = NULL);
-	void HandleInput(PNet::InputState input, uint8_t clientID, long timeSend);
-	void UpdateTankProperties(long timeSend, TankProperties listProperties[]);
+	void HandleInput();
+	void ClearInput() { listInput.clear(); }
+	void HandleInput(InputState input);
+	void UpdateTankProperties(long timeServerSend, TankProperties listProperties[]);
 	void Shoot(int tankID, BulletProperties bulletP);
-	void SetEndGame(long timeSend, int team, bool isBossDead);
-	void UpdateMap(vector<TileInfo> serverMap,long timeSend, int stageIndex);
-	void ShowItem(long timeSend, int x, int y, int type);
-	void EatItem(long timeSend, int playerID, int type);
-private :
+	void BurstingBullet(int tankID, long timeSend);
+	void SetEndGame(long timeServerSend, int team, bool isBossDead);
+	void UpdateMap(vector<TileInfo> serverMap, long timeServerSend, int stageIndex);
+	void ShowItem(long timeServerSend, int x, int y, int type);
+	void EatItem(long timeServerSend, int playerID, int type);
+	void UpdateState(SaveWorld *saveWorld);
+	Scene* GetScene() { return this->SceneManager; }
+private:
 	void ClientSendInput();
 	void ServerSendProperties();
 };
+#endif 
+
 

@@ -14,9 +14,25 @@ Item::Item(Sprite* sprite, Sound* sound)
 	this->position = D3DXVECTOR2(-20.0f, -20.0f);
 	timeSend = 0;
 }
+Item::Item(Item *item)
+{
+	CopyItem(item);
+	this->ItemAnimation = NULL;
+}
 Item::~Item()
 {
-	delete ItemAnimation;
+	if (ItemAnimation != NULL)
+		delete ItemAnimation;
+}
+
+void Item::CopyItem(Item * item)
+{
+	CopyObject(item);
+	this->ItemType = item->ItemType;
+	this->SpriteItem = item->SpriteItem;
+	this->StateItem = item->StateItem;
+	this->TimeApper = item->TimeApper;
+	this->timeSend = item->timeSend;
 }
 
 //Lấy loại Item
@@ -105,6 +121,9 @@ void Item::New()
 
 	for (int i = 0; i < Server::serverPtr->totalConnect; i++)
 		Server::serverPtr->connections[i].pm.Append(p);
+	if (ItemAnimation != NULL)
+		this->ItemAnimation->SetFrame(this->position, false, 0, SpriteItem, SpriteItem);
+
 }
 //Đổi chuyển động
 void Item::ChangeAnimation(float gameTime)
@@ -112,7 +131,6 @@ void Item::ChangeAnimation(float gameTime)
 	if (StateItem == Item::Appearing)
 	{
 		this->SetBound(16, 16);
-		this->ItemAnimation->SetFrame(this->position, false, 0, SpriteItem, SpriteItem);
 		this->TimeApper += gameTime;
 		if (TimeApper / 1000 >= TIME_LIVE_ITEM / 2)
 		{
@@ -149,56 +167,9 @@ void Item::OnCollision(std::vector <Tank*> &ListTank, Map* map)
 				switch (ItemType)
 				{
 					//Player bất tử
-					case Item::Hat:
-						ListTank.at(i)->SetImmortal(true);
-						break;
-
-					//Tank Enemy đứng yên 15s
-					//case Item::Clock:
-					//	for (size_t j = 0; j < ListTank.size(); j++)
-					//	{
-					//		if (ListTank.at(j)->Tag == Object::enemy)
-					//		{
-					//			ListTank.at(j)->SetLockMove(true);
-					//			if (ListTank.at(j)->GetState() != Statetank::Appearing && ListTank.at(j)->GetState() != Statetank::Dying)
-					//				ListTank.at(j)->SetState(Statetank::Standing);
-					//		}
-					//	}
-					//	break;
-
-					//Xây Metal cho boss team
-					/*case Item::Shovel:
-					if (ListTank.at(i)->GetTeam() == 0)
-					{
-						map->isChangMetalWall();
-						map->SetWallTeam0(6);
-					}
-					else if (ListTank.at(i)->GetTeam() == 1)
-					{
-						map->isChangMetalWall();
-						map->SetWallTeam1(6);
-					}
-					break;*/
-
-					////Tăng 1 level cho Player
-					//case Item::Star:
-					//	ListTank.at(i)->SetLevel(ListTank.at(i)->GetLevel() + 1);
-					//	break;
-
-					////All Enemy Dying
-					//case Item::Grenade:
-					//	for (size_t j = 0; j < ListTank.size(); j++)
-					//	{
-					//		if (ListTank.at(j)->Tag == Object::enemy)
-					//		{
-					//			//Nếu đang hồi sinh hoặc đang chết thì không chết
-					//			if (ListTank.at(j)->GetState() != Statetank::Appearing && 
-					//				ListTank.at(j)->GetState() != Statetank::Dying)
-					//			ListTank.at(j)->SetState(Statetank::Dying);
-					//		}
-					//	}
-					//	break;
-
+				case Item::Hat:
+					ListTank.at(i)->SetImmortal(true);
+					break;
 					//Tăng 1 mạng cho Player khi có ít hơn 4 mạng
 				case Item::TankLife:
 					if (ListTank.at(i)->GetLife() < 4)
@@ -231,8 +202,7 @@ void Item::OnCollision(std::vector <Tank*> &ListTank, Map* map)
 					p.write_bits(ItemType, 2);
 					p.write_bits(ListTank.at(i)->GetIDNetWork(), 3);
 
-					for (int i = 0; i < Server::serverPtr->totalConnect; i++)
-						Server::serverPtr->connections[i].pm.Append(p);
+					gamePacket.Append(p);
 				}
 			}
 
@@ -242,19 +212,10 @@ void Item::OnCollision(std::vector <Tank*> &ListTank, Map* map)
 //Update
 void Item::Update(float gameTime)
 {
-	if (Server::serverPtr)
-	{
-		long time = GetTickCount();
-		if ((float)(time - timeSend) / 1000.0f >= TIME_UPDATE_ITEM)
-		{
-			timeSend = time;
-			this->New();
-		}
-	}
 	if (this->ItemType == Item::NoneItem)
 		return;
-
-	this->ItemAnimation->Update(gameTime);
+	if (ItemAnimation != NULL)
+		this->ItemAnimation->Update(gameTime);
 	this->ChangeAnimation(gameTime);
 }
 
@@ -292,6 +253,8 @@ void Item::ShowItem(float lag, int x, int y, Itemtype type)
 	default:
 		break;
 	}
+	this->ItemAnimation->SetFrame(this->position, false, 0, SpriteItem, SpriteItem);
+
 }
 
 void Item::EatItem(float lag, int playerID, vector<Tank*> ListTank, Itemtype type)
@@ -330,5 +293,15 @@ void Item::EatItem(float lag, int playerID, vector<Tank*> ListTank, Itemtype typ
 			}
 			break;
 		}
+	}
+}
+
+void Item::CreateItem()
+{
+	long time = GetTickCount();
+	if ((float)(time - timeSend) / 1000.0f >= TIME_UPDATE_ITEM)
+	{
+		timeSend = time;
+		this->New();
 	}
 }

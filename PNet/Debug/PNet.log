@@ -1,2 +1,12 @@
 ﻿  Client.cpp
+  Packet.cpp
+e:\hoctap\game\game socket\tanksocket\pnet\packet.cpp(24): warning C4267: 'initializing': conversion from 'size_t' to 'uint8_t', possible loss of data
+e:\hoctap\game\game socket\tanksocket\pnet\packet.cpp(24): warning C4267: 'initializing': conversion from 'size_t' to 'const uint8_t', possible loss of data
+e:\hoctap\game\game socket\tanksocket\pnet\packet.cpp(46): warning C4267: 'initializing': conversion from 'size_t' to 'uint8_t', possible loss of data
+e:\hoctap\game\game socket\tanksocket\pnet\packet.cpp(46): warning C4267: 'initializing': conversion from 'size_t' to 'const uint8_t', possible loss of data
+e:\hoctap\game\game socket\tanksocket\pnet\packet.cpp(48): warning C4267: '+=': conversion from 'size_t' to 'uint8_t', possible loss of data
+  Server.cpp
+  Socket.cpp
+e:\hoctap\game\game socket\tanksocket\pnet\socket.cpp(279): warning C4267: 'initializing': conversion from 'size_t' to 'uint8_t', possible loss of data
+  Generating Code...
   PNet.vcxproj -> E:\hoctap\Game\Game socket\TankSocket\Debug\PNet.lib

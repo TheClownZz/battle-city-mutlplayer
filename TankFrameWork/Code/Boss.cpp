@@ -14,9 +14,20 @@ Boss::Boss(Sprite* sprite, Sound* sound, int team)
 	this->SetVelocity(0.0f, 0.0f);
 }
 
+Boss::Boss(Boss *boss)
+{
+	CopyBoss(boss);
+	this->BossAnimation = NULL;
+}
 
 Boss::~Boss()
 {
+}
+
+void Boss::CopyBoss(Boss * boss)
+{
+	Object::CopyObject(boss);
+	this->Team = boss->Team;
 }
 
 int Boss::GetTeam()
@@ -53,14 +64,16 @@ void Boss::ChangeAnimation(float gameTime)
 	case Boss::Alive:
 	{
 		this->SetBound(15, 15);
-		this->BossAnimation->SetFrame(this->position, false, 0, 286, 286);
+		if (BossAnimation != NULL)
+			this->BossAnimation->SetFrame(this->position, false, 0, 286, 286);
 		break;
 	}
 
 	case Boss::Dead:
 	{
 		this->SetBoundZero();
-		this->BossAnimation->SetFrame(this->position, false, 60, 287, 287);
+		if (BossAnimation != NULL)
+			this->BossAnimation->SetFrame(this->position, false, 60, 287, 287);
 		break;
 	}
 
@@ -96,7 +109,8 @@ void Boss::OnCollision(std::vector <Tank*> &ListTank, float gameTime)
 void Boss::Update(float gameTime)
 {
 	ChangeAnimation(gameTime);
-	this->BossAnimation->Update(gameTime);
+	if (BossAnimation != NULL)
+		this->BossAnimation->Update(gameTime);
 }
 
 //Render

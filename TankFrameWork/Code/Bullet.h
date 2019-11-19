@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include<PNet\PacketManager.h>
 #include "Object.h"
 #include "Animation.h"
 #include "Collision.h"
@@ -15,14 +16,17 @@ protected:
 	int SpriteBullet;
 	int DirectionBullet;
 public:
+	PNet::PacketManager gamePacket;
 	enum Statebullet
 	{
 		Firing,
 		Bursting,
 	};
 	Statebullet StateBullet;
-
 	Bullet(Sprite* sprite, Sound* sound);
+	Bullet(Bullet *bullet);
+	
+	void CopyBullet(Bullet *bullet);
 	~Bullet();
 
 	//Lấy trạng thái
@@ -48,6 +52,8 @@ public:
 	void Render(Viewport* viewport);
 
 	void SetTimeBurst(float time) { this->TimeBurst = time; }
+
+	void SendBurstingBullet(int networkID);
 
 };
 

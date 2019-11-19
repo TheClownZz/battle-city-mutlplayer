@@ -18,8 +18,9 @@ public:
 	Stateboss StateBoss;
 
 	Boss(Sprite* sprite, Sound* sound, int team);
+	Boss(Boss *boss);
 	~Boss();
-
+	void CopyBoss(Boss *boss);
 	int GetTeam();
 
 	//Lấy trạng thái

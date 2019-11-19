@@ -7,7 +7,6 @@ protected:
 public:
 	TankPlayer(Sprite* sprite, Sound* sound, int team, int id);
 	~TankPlayer();
-
 	void SetLevel(int level);
 	void SetLife(int life);
 	int GetLife();

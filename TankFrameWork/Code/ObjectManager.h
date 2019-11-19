@@ -53,7 +53,6 @@ protected:
 
 
 	vector <Tank*> ListTank;
-	vector <Bullet*> ListBullet;
 	vector <Item*> ListItem;
 	vector <Boss*> ListBoss;
 

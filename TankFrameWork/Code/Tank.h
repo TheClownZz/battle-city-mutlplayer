@@ -1,4 +1,7 @@
 ﻿#pragma once
+#ifndef TANK_H
+#define TANK_H
+#include"Map.h"
 #include "Object.h"
 #include "Bullet.h"
 #include "Animation.h"
@@ -6,8 +9,10 @@
 #include "GameDefine.h"
 #include"SoundTank.h"
 #include <vector>
+
 using namespace Define;
 using namespace PNet;
+class Map;
 class Tank : public Object
 {
 protected:
@@ -23,6 +28,7 @@ protected:
 	int Life, Level, Team, idNetWork;
 	//bool bất tử
 	bool Immortal, Shoot, ReLoad;
+	float  TimeChangeMove, TimeMove;
 
 	//đạn
 	vector <Bullet*> ListBullet;
@@ -34,9 +40,12 @@ public:
 
 public:
 	//đạn
+	Map *map;
 	vector <Bullet*> GetListBullet();
 	Statetank StateTank;
-	Tank(Sprite* sprite, Sound* sound, int _id =-1);
+	Tank(Sprite* sprite, Sound* sound, int _id = -1);
+	Tank(Tank *tank);
+	void CopyTank(Tank *tank);
 	~Tank();
 
 	//Get/Set một số thông tin
@@ -56,13 +65,14 @@ public:
 	void SetImmortal(bool immortal);
 	bool isImmortal();
 
-	void SetLockMove(bool lockmove);
 	void SetShoot(bool isShoot, BulletProperties bulletP);
+	void SetBurstingBullet(long timeSend);
 	void SetLevel(int level);
 	void SetLife(int life);
 	void SetTimeShootLag(float lag);
 	int GetLife();
-
+	bool GetShootState() { return Shoot; }
+	float GetTankSpeed() { return TankSpeed; }
 	//Lấy trạng thái
 	Statetank GetState();
 	//Set trạng thái
@@ -90,4 +100,5 @@ public:
 
 
 };
+#endif 
 
