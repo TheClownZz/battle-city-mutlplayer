@@ -167,7 +167,7 @@ void SaveWorld::UpdateSaveWorld(SaveWorld *nextWorld)
 
 void SaveWorld::UpdateState(Game *game, long _time, float _gameTime)
 {
-	this->time = time;
+	this->time = _time;
 	this->gameTime = _gameTime;
 
 	this->listInput = game->listInput;

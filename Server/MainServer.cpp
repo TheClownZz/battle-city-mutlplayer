@@ -11,7 +11,7 @@
 #pragma comment(lib, "Ws2_32.lib")
 using namespace PNet;
 using namespace Define;
-#define NUM_SAVE_WORLD 5
+#define NUM_SAVE_WORLD 4
 vector<InputState> unHandleInput;
 vector<SaveWorld*> listSaveWorld;
 bool isStart = false;
@@ -100,8 +100,11 @@ int UpdateWorldInput(long currentTime, Game &game)
 				listSaveWorld.at(i)->listInput.push_back(input);
 				if (i < lastWorldUpdate)
 					lastWorldUpdate = i;
-				long ping = GetTickCount() - input.timeSend;
+				long ping = currentTime - input.timeSend;
 				cout << "lastWorldUpdate:" << lastWorldUpdate << " ping:" << ping << endl;
+				cout << "ping save world:" << listSaveWorld.at(i)->time - input.timeSend << endl;
+				cout << "diferent :" << currentTime - listSaveWorld.at(i)->time << endl;
+				cout << listSaveWorld.at(i)->time << " " << input.timeSend << endl;
 				break;
 			}
 		}
@@ -109,41 +112,44 @@ int UpdateWorldInput(long currentTime, Game &game)
 	return lastWorldUpdate;
 
 }
-void RollBack(long currentTime, Game &game)
+void RollBack(long currentTime, Game &game, float gameTime)
 {
 	//Bo input vao game world theo time
 	int lastWorldUpdate = UpdateWorldInput(currentTime, game);
 
-	//Return khi khong co input delay
-	if (lastWorldUpdate >= listSaveWorld.size() || lastWorldUpdate < 0)
-		return;
-	cout << "roll back tu save world thu " << lastWorldUpdate << endl;
-	//Update lai save world va rollback lai game world
-	for (size_t i = lastWorldUpdate; i < listSaveWorld.size() - 1; i++)
+	// save lai cac save world  khong rollback
+	for (int i = 0; i < lastWorldUpdate; i++)
 	{
-		listSaveWorld.at(i)->UpdateSaveWorld(listSaveWorld.at(i + 1));
-		listSaveWorld.at(i + 1)->UpdateState(listSaveWorld.at(i));
+		if (i == NUM_SAVE_WORLD - 1)
+			break;
+		listSaveWorld.at(i)->UpdateState(listSaveWorld.at(i + 1));
+		listSaveWorld.at(i)->gameTime = listSaveWorld.at(i + 1)->gameTime;
+		listSaveWorld.at(i)->time = listSaveWorld.at(i + 1)->time;
 	}
-	listSaveWorld.at(listSaveWorld.size() - 1)->UpdateSaveWorld();
-	//rollback game
-	game.UpdateState(listSaveWorld.at(listSaveWorld.size() - 1));
-}
-void UpdateSaveWorlds(Game *game, long currentTime, float gameTime)
-{
-	if (listSaveWorld.size() <= 0)
+	//rollback
+	if (lastWorldUpdate < NUM_SAVE_WORLD)
 	{
-		cout << "listSaveWorld.size() =0 " << endl;
-		return;
+		cout << "gameTime:" << gameTime << endl;
+		cout << "roll back tu save world thu " << lastWorldUpdate << endl;
+		for (size_t i = lastWorldUpdate; i < listSaveWorld.size() - 1; i++)
+		{
+			listSaveWorld.at(i)->UpdateSaveWorld(listSaveWorld.at(i + 1));
+			listSaveWorld.at(i + 1)->UpdateState(listSaveWorld.at(i));
+		}
+		listSaveWorld.at(listSaveWorld.size() - 1)->UpdateSaveWorld();
+
+		game.UpdateState(listSaveWorld.at(listSaveWorld.size() - 1));
 	}
 
-	for (size_t i = 0; i < listSaveWorld.size() - 1; i++)
+	//save lai cac world duoc rollback
+	for (int i = lastWorldUpdate; i < listSaveWorld.size() - 1; i++)
 	{
 		listSaveWorld.at(i)->UpdateState(listSaveWorld.at(i + 1));
 		listSaveWorld.at(i)->gameTime = listSaveWorld.at(i + 1)->gameTime;
 		listSaveWorld.at(i)->time = listSaveWorld.at(i + 1)->time;
 	}
-
-	listSaveWorld.at(listSaveWorld.size() - 1)->UpdateState(game, currentTime, gameTime);
+	//save last game
+	listSaveWorld.at(listSaveWorld.size() - 1)->UpdateState(&game, currentTime, gameTime);
 }
 void ListenClient(int numClient)
 {
@@ -220,13 +226,11 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 							SortInputPacket();
 							if (isStart)
 							{
-								RollBack(current, game);
-								UpdateSaveWorlds(&game, current, gameTime);
+								RollBack(current, game, gameTime);
 							}
-
 							game.HandleInput();
 							game.Update(gameTime);
-							game.Render();
+							//game.Render();
 							game.ClearInput();
 						}
 						else
