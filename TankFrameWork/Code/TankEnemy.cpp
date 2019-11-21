@@ -10,6 +10,7 @@ TankEnemy::TankEnemy(Sprite* sprite, Sound* sound, int _id, int level) : Tank(sp
 	this->Life = 1;
 	this->Shoot = false;
 	this->Level = level;
+	this->runAi = true;
 }
 
 
@@ -187,7 +188,7 @@ void TankEnemy::OnCollision(Object *object_0, float gameTime)
 void TankEnemy::Update(float gameTime)
 {
 	//Tank
-	if (Server::serverPtr != NULL)
+	if (Server::serverPtr != NULL && runAi)
 		this->AI();
 
 	Tank::Update(gameTime);

@@ -17,7 +17,7 @@ TankPlayer::TankPlayer(Sprite* sprite, Sound* sound, int team, int _id) : Tank(s
 
 TankPlayer::~TankPlayer()
 {
-	if (EffectAnimation)
+	if (EffectAnimation != NULL)
 		delete EffectAnimation;
 }
 
@@ -184,12 +184,12 @@ void TankPlayer::ChangeAnimation(float gameTime)
 		if (TimeImmortal >= Immortal_Time)
 		{
 			this->Immortal = false;
-			if (EffectAnimation)
+			if (EffectAnimation != NULL)
 				this->EffectAnimation->SetPosition(D3DXVECTOR2(0.0f, 0.0f));
 			this->TimeImmortal = 0.0f;
 			return;
 		}
-		if (EffectAnimation)
+		if (EffectAnimation != NULL)
 			this->EffectAnimation->SetFrame(this->position, false, 50, 304, 305);
 	}
 
@@ -258,7 +258,7 @@ void TankPlayer::Update(float gameTime)
 {
 	//Tank
 	Tank::Update(gameTime);
-	if (EffectAnimation)
+	if (EffectAnimation != NULL)
 		this->EffectAnimation->Update(gameTime);
 }
 //Render

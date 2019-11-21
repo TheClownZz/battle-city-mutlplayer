@@ -32,6 +32,8 @@ Tank::Tank(Tank * tank)
 	this->ListBullet.push_back(b);
 	CopyTank(tank);
 	this->TankAnimation = NULL;
+	this->sprite = tank->sprite;
+	this->sound = tank->sound;
 
 }
 

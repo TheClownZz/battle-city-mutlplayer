@@ -3,8 +3,11 @@
 
 class TankEnemy : public Tank
 {
+private:
+	bool runAi;
 public:
 	TankEnemy(Sprite* sprite, Sound* sound, int _id, int level = 4);
+	TankEnemy(Tank *tank) :Tank(tank) { runAi = false; }
 	~TankEnemy();
 
 	//Kiểm tra HP

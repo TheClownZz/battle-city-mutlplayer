@@ -2,6 +2,8 @@
 #ifndef SAVE_WORLD_H
 #define SAVE_WORLD_H
 #include<TankFrameWork/Code/Game.h>
+#include<TankFrameWork/Code/TankPlayer.h>
+#include<TankFrameWork/Code/TankEnemy.h>
 #include<TankFrameWork/Code/Tank.h>
 #include<TankFrameWork/Code/Map.h>
 #include<TankFrameWork/Code/Item.h>

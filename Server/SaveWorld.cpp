@@ -14,9 +14,28 @@ SaveWorld::SaveWorld(Game *game, long _time, float _gameTime)
 
 	for (size_t i = 0; i < gameObjects->GetListTank().size(); i++)
 	{
-		Tank *tank = new Tank(gameObjects->GetListTank().at(i));
-		listTank.push_back(tank);
-		tank->map = this->map;
+		switch (gameObjects->GetListTank().at(i)->Tag)
+		{
+		case Object::player:
+		{
+			TankPlayer *tankP = new TankPlayer(gameObjects->GetListTank().at(i));
+			tankP->map = this->map;
+			listTank.push_back(tankP);
+			break;
+		}
+		case Object::enemy:
+		{
+			TankEnemy *tankE = new TankEnemy(gameObjects->GetListTank().at(i));
+			tankE->map = this->map;
+			listTank.push_back(tankE);
+			break;
+		}
+		default:
+			Tank *tank = new Tank(gameObjects->GetListTank().at(i));
+			tank->map = this->map;
+			listTank.push_back(tank);
+			break;
+		}
 	}
 
 	for (size_t i = 0; i < gameObjects->GetListItem().size(); i++)

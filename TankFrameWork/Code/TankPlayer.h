@@ -6,6 +6,8 @@ protected:
 	Animation * EffectAnimation;
 public:
 	TankPlayer(Sprite* sprite, Sound* sound, int team, int id);
+	TankPlayer(Tank *tank) :Tank(tank) { this->EffectAnimation = NULL; }
+
 	~TankPlayer();
 	void SetLevel(int level);
 	void SetLife(int life);
