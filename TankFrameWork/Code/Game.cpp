@@ -195,7 +195,7 @@ void Game::HandleInput()
 	for (size_t i = 0; i < listInput.size(); i++)
 	{
 		float lag = (float)(current - listInput.at(i).timeSend);
-		if (lag < 0 || lag  >  Max_Ping)
+		if (lag < 0 || lag  >  2 * Max_Ping)
 			continue;
 		Tank *tank = SceneManager->GetObjectManager()->GetListTank().at(listInput.at(i).clientID);
 		tank->KeyHandle(listInput.at(i), lag);
@@ -208,7 +208,7 @@ void Game::HandleInput(InputState input)
 		return;
 	long current = GetTickCount();
 	float lag = (float)(current - input.timeSend);
-	if (lag < 0 || lag >  Max_Ping)
+	if (lag < 0 || lag > 2 * Max_Ping)
 		return;
 	Tank *tank = SceneManager->GetObjectManager()->GetListTank().at(input.clientID);
 	tank->KeyHandle(input, lag);

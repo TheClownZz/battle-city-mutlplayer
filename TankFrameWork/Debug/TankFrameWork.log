@@ -1,10 +1,45 @@
-﻿  Game.cpp
+﻿  Animation.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Boss.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Bullet.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Collision.cpp
+  dsutil.cpp
+  Game.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Graphic.cpp
+  InfoSprite.cpp
+  Item.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Keyboard.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Map.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Object.cpp
   d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
   ObjectManager.cpp
   d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
   Scene.cpp
   d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Sound.cpp
+  SoundTank.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Sprite.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Tank.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
   TankEnemy.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  TankPlayer.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Generating Code...
+  Compiling...
+  tinystr.cpp
+  tinyxml.cpp
+  tinyxmlerror.cpp
+  tinyxmlparser.cpp
+  Viewport.cpp
   d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
   Generating Code...
   TankFrameWork.vcxproj -> E:\hoctap\Game\Game socket\TankSocket\Debug\TankFrameWork.lib

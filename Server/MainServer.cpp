@@ -11,7 +11,9 @@
 #pragma comment(lib, "Ws2_32.lib")
 using namespace PNet;
 using namespace Define;
-#define NUM_SAVE_WORLD 4
+#define NUM_SAVE_WORLD 5
+float frame_rate = 1000.0f / Define::FPSGame;
+
 vector<InputState> unHandleInput;
 vector<SaveWorld*> listSaveWorld;
 bool isStart = false;
@@ -71,13 +73,15 @@ void ProcessPacket(Packet & packet, Game &game)
 	}
 }
 
-int UpdateWorldInput(long currentTime, Game &game)
+int UpdateWorldInput(long currentTime, Game &game, float gameTime)
 {
 	int lastWorldUpdate = NUM_SAVE_WORLD;// save world cuoi cung dc update input
 	// Bo input vao game world hien tai
 	while (!unHandleInput.empty())
 	{
-		if (currentTime - unHandleInput.at(unHandleInput.size() - 1).timeSend <= Min_Ping)
+		long inputTime = unHandleInput.at(unHandleInput.size() - 1).timeSend;
+		if (currentTime - inputTime <= gameTime ||
+			inputTime >= listSaveWorld.at(listSaveWorld.size() - 1)->time)
 		{
 			InputState input;
 			input = unHandleInput.back();
@@ -85,7 +89,11 @@ int UpdateWorldInput(long currentTime, Game &game)
 			game.listInput.push_back(input);
 		}
 		else
+		{
+			long ping = currentTime - inputTime;
+			cout << "ping:" << ping << endl;
 			break;
+		}
 	}
 	// Bo input vao save world hien tai
 	while (!unHandleInput.empty())
@@ -95,16 +103,12 @@ int UpdateWorldInput(long currentTime, Game &game)
 		unHandleInput.pop_back();
 		for (size_t i = listSaveWorld.size() - 1; i >= 0; i--)
 		{
-			if (listSaveWorld.at(i)->time - input.timeSend <= Min_Ping)
+			if (listSaveWorld.at(i)->time - input.timeSend <= listSaveWorld.at(i)->gameTime
+				|| (i > 0 && input.timeSend >= listSaveWorld.at(i - 1)->time))
 			{
 				listSaveWorld.at(i)->listInput.push_back(input);
 				if (i < lastWorldUpdate)
 					lastWorldUpdate = i;
-				long ping = currentTime - input.timeSend;
-				cout << "lastWorldUpdate:" << lastWorldUpdate << " ping:" << ping << endl;
-				cout << "ping save world:" << listSaveWorld.at(i)->time - input.timeSend << endl;
-				cout << "diferent :" << currentTime - listSaveWorld.at(i)->time << endl;
-				cout << listSaveWorld.at(i)->time << " " << input.timeSend << endl;
 				break;
 			}
 		}
@@ -115,8 +119,7 @@ int UpdateWorldInput(long currentTime, Game &game)
 void RollBack(long currentTime, Game &game, float gameTime)
 {
 	//Bo input vao game world theo time
-	int lastWorldUpdate = UpdateWorldInput(currentTime, game);
-
+	int lastWorldUpdate = UpdateWorldInput(currentTime, game, gameTime);
 	// save lai cac save world  khong rollback
 	for (int i = 0; i < lastWorldUpdate; i++)
 	{
@@ -199,7 +202,6 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 				LARGE_INTEGER startTime;
 				QueryPerformanceCounter(&startTime);
 				LARGE_INTEGER endTime;
-				float frame_rate = 1000.0f / Define::FPSGame;
 				float gameTime = 0;
 				while (Msg.message != WM_QUIT)
 				{
@@ -222,7 +224,6 @@ int WINAPI WinMain(HINSTANCE Hins, HINSTANCE HIns, LPTSTR a, int c)
 								Packet p = Server::serverPtr->gamePacket.Retrieve();
 								ProcessPacket(p, game);
 							}
-
 							SortInputPacket();
 							if (isStart)
 							{
