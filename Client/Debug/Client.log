@@ -1,1 +1,3 @@
-﻿  Client.vcxproj -> E:\hoctap\Game\Game socket\TankSocket\Debug\Client.exe
+﻿  MainClient.cpp
+  d:\thu vien\microsoft directx sdk (june 2010)\include\dinput.h: DIRECTINPUT_VERSION undefined. Defaulting to version 0x0800
+  Client.vcxproj -> E:\hoctap\Game\Game socket\TankSocket\Debug\Client.exe

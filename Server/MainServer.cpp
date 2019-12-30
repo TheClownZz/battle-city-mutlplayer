@@ -101,10 +101,10 @@ int UpdateWorldInput(long currentTime, Game &game, float gameTime)
 		InputState input;
 		input = unHandleInput.back();
 		unHandleInput.pop_back();
-		for (size_t i = listSaveWorld.size() - 1; i >= 0; i--)
+		for (int i = My_Min(listSaveWorld.size() - 1, lastWorldUpdate); i >= 0; i--)
 		{
 			if (listSaveWorld.at(i)->time - input.timeSend <= listSaveWorld.at(i)->gameTime
-				|| (i > 0 && input.timeSend >= listSaveWorld.at(i - 1)->time))
+				|| (i > 0 && input.timeSend >= listSaveWorld.at(i - 1)->time) || i == 0)
 			{
 				listSaveWorld.at(i)->listInput.push_back(input);
 				if (i < lastWorldUpdate)

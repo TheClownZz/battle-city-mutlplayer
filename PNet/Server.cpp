@@ -334,15 +334,7 @@ namespace PNet
 				std::cout << "igone PT_Input id:" << packetID << std::endl;
 				break;
 			}
-			long timeSend = packet.read_bits(bitIndex, sizeof(long) * 8);
-			long current = GetTickCount();
-			if (current - timeSend >= Max_Ping)
-			{
-				std::cout << "igone PT_Input id:" << packetID << "ping: " << current - timeSend << std::endl;
-				break;
-			}
-			if (current - timeSend >= Min_Ping)
-				std::cout << current - timeSend << std::endl;
+
 			serverPtr->packetReceiveID[clientID] = packetID;
 			Packet p(PacketType::PT_Input);
 			p._buffer = packet._buffer;

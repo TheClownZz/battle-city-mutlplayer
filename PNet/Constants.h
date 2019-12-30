@@ -45,7 +45,6 @@ namespace PNet
 		int dy;
 		int direct;
 		Statetank state;
-		TankBulletProperties bullet;
 	};
 	struct BulletProperties {
 		long timeSend;
@@ -85,4 +84,9 @@ namespace PNet
 	{
 		return (a < b) ? a : b;
 	}
+	inline int My_Min(int a, int b)
+	{
+		return (a < b) ? a : b;
+	}
+
 }
